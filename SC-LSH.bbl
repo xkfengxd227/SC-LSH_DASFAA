@@ -1,0 +1,261 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{DOI~\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{DOI~\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+
+\bibitem{andre2015cachePQ}
+Andr{\'e}, F., Kermarrec, A.M., Le~Scouarnec, N.: Cache locality is not enough:
+  high-performance nearest neighbor search with product quantization fast scan.
+\newblock Proceedings of the VLDB Endowment \textbf{9}(4), 288--299 (2015)
+
+\bibitem{Babenko2012Inverted}
+Babenko, A., Lempitsky, V.: The inverted multi-index.
+\newblock In: Computer Vision and Pattern Recognition (CVPR), 2012 IEEE
+  Conference on, pp. 3069--3076. IEEE (2012)
+
+\bibitem{Bohm2000}
+B\"{o}hm, C.: A cost model for query processing in high dimensional data
+  spaces.
+\newblock ACM Trans. Database Syst. \textbf{25}(2), 129--178 (2000)
+
+\bibitem{Bohm2001}
+B\"{o}hm, C., Berchtold, S., Keim, D.A.: Searching in high-dimensional spaces:
+  Index structures for improving the performance of multimedia databases.
+\newblock ACM Comput. Surv. \textbf{33}(3), 322--373 (2001)
+
+\bibitem{Datar2004}
+Datar, M., Immorlica, N., Indyk, P., Mirrokni, V.S.: Locality-sensitive hashing
+  scheme based on p-stable distributions.
+\newblock In: SoCG, pp. 253--262 (2004)
+
+\bibitem{Dong2011kNNG}
+Dong, W., Moses, C., Li, K.: Efficient k-nearest neighbor graph construction
+  for generic similarity measures.
+\newblock In: International Conference on World Wide Web, pp. 577--586 (2011)
+
+\bibitem{Faloutsos1986Gray}
+Faloutsos, C.: Multiattribute hashing using gray codes.
+\newblock In: ACM SIGMOD International Conference on Management of Data,
+  Washington, D.c., May, pp. 227--238 (1986)
+
+\bibitem{Faloutsos1989Fractals}
+Faloutsos, C., Roseman, S.: Fractals for secondary key retrieval.
+\newblock In: Eighth ACM Sigact-Sigmod-Sigart Symposium on Principles of
+  Database Systems, pp. 247--252 (1989)
+
+\bibitem{Feng2017HBPlus}
+Feng, X., Cui, J., Liu, Y., Li, H.: Effective optimizations of cluster-based
+  nearest neighbor search in high-dimensional space.
+\newblock Multimedia Syst. \textbf{23}(1), 139--153 (2017)
+
+\bibitem{Ferha2000}
+Ferhatosmanoglu, H., Tuncel, E., Agrawal, D.: Vector approximation based
+  indexing for non-uniform high dimensional data sets.
+\newblock In: CIKM, pp. 202--209 (2000)
+
+\bibitem{Fu2016EFANNA}
+Fu, C., Cai, D.: {EFANNA} : An extremely fast approximate nearest neighbor
+  search algorithm based on knn graph.
+\newblock CoRR \textbf{abs/1609.07228} (2016)
+
+\bibitem{MultiDAccess98}
+Gaede, V., G{\"u}nther, O.: Multidimensional access methods.
+\newblock ACM Computing Surveys (CSUR) \textbf{30}(2), 170--231 (1998)
+
+\bibitem{Gan2012C2LSH}
+Gan, J., Feng, J., Fang, Q., Ng, W.: Locality sensitive hashing scheme based on
+  dyanmic collision counting.
+\newblock In: SIGMOD, pp. 541--552 (2012)
+
+\bibitem{Gan2012ScalablekNNG}
+Gan, R.: Scalable k-nn graph construction for visual descriptors.
+\newblock In: IEEE Conference on Computer Vision and Pattern Recognition, pp.
+  1106--1113 (2012)
+
+\bibitem{Gionis1999}
+Gionis, A., Indyk, P., Motwani, R.: Similarity search in high dimensions via
+  hashing.
+\newblock In: VLDB, pp. 518--529 (1999)
+
+\bibitem{Gong2011}
+Gong, Y., Lazebnik, S.: Iterative quantization: A procrustean approach to
+  learning binary codes.
+\newblock In: Computer Vision and Pattern Recognition (CVPR), 2011 IEEE
+  Conference on, pp. 817--824 (2011)
+
+\bibitem{Hajebi2009AkNNG}
+Hajebi, K., Abbasi-Yadkori, Y., Shahbazi, H., Zhang, H.: Fast approximate
+  nearest-neighbor search with k-nearest neighbor graph.
+\newblock In: IJCAI 2011, Proceedings of the International Joint Conference on
+  Artificial Intelligence, Barcelona, Catalonia, Spain, July, pp. 1312--1317
+  (2009)
+
+\bibitem{HarwoodD2016FANNG}
+Harwood, B., Drummond, T.: {FANNG:} fast approximate nearest neighbour graphs.
+\newblock In: 2016 {IEEE} Conference on Computer Vision and Pattern
+  Recognition, {CVPR} 2016, Las Vegas, NV, USA, June 27-30, 2016, pp.
+  5713--5722 (2016)
+
+\bibitem{Huang2015QALSH}
+Huang, Q., Feng, J., Zhang, Y., Fang, Q., Ng, W.: Query-aware
+  locality-sensitive hashing for approximate nearest neighbor search.
+\newblock Proceedings of the Vldb Endowment \textbf{9}(1), 1--12 (2015)
+
+\bibitem{Hwang2012FNN}
+Hwang, Y., Han, B., Ahn, H.: A fast nearest neighbor search algorithm by
+  nonlinear embedding.
+\newblock In: 2012 {IEEE} Conference on Computer Vision and Pattern
+  Recognition, Providence, RI, USA, June 16-21, 2012, pp. 3053--3060 (2012)
+
+\bibitem{Indyk1998LSH}
+Indyk, P., Motwani, R.: Approximate nearest neighbors: Towards removing the
+  curse of dimensionality.
+\newblock In: Proceedings of the Thirtieth Annual {ACM} Symposium on the Theory
+  of Computing, Dallas, Texas, USA, May 23-26, 1998, pp. 604--613 (1998)
+
+\bibitem{Jagadish2005iDistance}
+Jagadish, H.V., Ooi, B.C., Tan, K.L., Yu, C., Zhang, R.: idistance: An adaptive
+  b+-tree based indexing method for nearest neighbor search.
+\newblock ACM Trans. Database Syst. \textbf{30}(2), 364--397 (2005)
+
+\bibitem{Jegou2011PQ}
+Jegou, H., Douze, M., Schmid., C.: Product quantization for nearest neighbor
+  search.
+\newblock IEEE TPAMI \textbf{33(1)}, 117--128 (2011)
+
+\bibitem{Jin2014NNE}
+Jin, Z., Zhang, D., Hu, Y., Lin, S., Cai, D., He, X.: Fast and accurate hashing
+  via iterative nearest neighbors expansion.
+\newblock {IEEE} Trans. Cybernetics \textbf{44}(11), 2167--2177 (2014)
+
+\bibitem{Joly2008}
+Joly, A., Buisson, O.: A posteriori multi-probe locality sensitive hashing.
+\newblock In: ACM Multimedia, pp. 209--218 (2008)
+
+\bibitem{Yannis2014LOPQ}
+Kalantidis, Y., Avrithis, Y.S.: Locally optimized product quantization for
+  approximate nearest neighbor search.
+\newblock In: 2014 {IEEE} Conference on Computer Vision and Pattern
+  Recognition, {CVPR} 2014, Columbus, OH, USA, June 23-28, 2014, pp. 2329--2336
+  (2014)
+
+\bibitem{Liu2014SKLSH}
+Liu, Y., Cui, J., Huang, Z., Li, H., Shen, H.T.: {SK-LSH:} an efficient index
+  structure for approximate nearest neighbor search.
+\newblock {PVLDB} \textbf{7}(9), 745--756 (2014)
+
+\bibitem{Lowe2004Distinctive}
+Lowe, D.G.: Distinctive image features from scale-invariant keypoints.
+\newblock International Journal of Computer Vision \textbf{60}(2), 91--110
+  (2004)
+
+\bibitem{Lv2007}
+Lv, Q., Josephson, W., Wang, Z., Charikar, M., Li, K.: Multi-probe lsh:
+  efficient indexing for high-dimensional similarity search.
+\newblock In: VLDB, pp. 950--961 (2007)
+
+\bibitem{Malkov2014SmallWorld}
+Malkov, Y., Ponomarenko, A., Logvinov, A., Krylov, V.: Approximate nearest
+  neighbor algorithm based on navigable small world graphs.
+\newblock Inf. Syst. \textbf{45}, 61--68 (2014)
+
+\bibitem{Malkov2016HNSW}
+Malkov, Y.A., Yashunin, D.A.: Efficient and robust approximate nearest neighbor
+  search using hierarchical navigable small world graphs.
+\newblock CoRR \textbf{abs/1603.09320} (2016)
+
+\bibitem{Norouzi2013}
+Norouzi, M., Fleet, D.J.: Cartesian k-means.
+\newblock In: 2013 {IEEE} Conference on Computer Vision and Pattern
+  Recognition, Portland, OR, USA, June 23-28, 2013, pp. 3017--3024 (2013)
+
+\bibitem{Oliva2001Modeling}
+Oliva, A., Torralba, A.: Modeling the shape of the scene: A holistic
+  representation of the spatial envelope.
+\newblock International Journal of Computer Vision \textbf{42}(3), 145--175
+  (2001)
+
+\bibitem{Panigrahy2006}
+Panigrahy, R.: Entropy based nearest neighbor search in high dimensions.
+\newblock In: SODA, pp. 1186 -- 1195 (2006)
+
+\bibitem{Paredes2006kNNG}
+Paredes, R., Chávez, E., Figueroa, K., Navarro, G.: Practical Construction of
+  k-Nearest Neighbor Graphs in Metric Spaces.
+\newblock Springer Berlin Heidelberg (2006)
+
+\bibitem{Ponomarenko2011}
+Ponomarenko, A., Avrelin, N., Naidan, B., Boytsov, L.: Comparative analysis of
+  data structures for approximate nearest neighbor search.
+\newblock In: International Conference on Emerging Network Intelligence, pp.
+  125--130 (2011)
+
+\bibitem{Ramaswamy2011HB}
+Ramaswamy, S., Rose, K.: Adaptive cluster distance bounding for
+  high-dimensional indexing.
+\newblock IEEE Trans. on Knowl. and Data Eng. \textbf{23}(6), 815--830 (2011)
+
+\bibitem{Sun2014SRS}
+Sun, Y., Wang, W., Qin, J., Zhang, Y., Lin, X.: {SRS:} solving c-approximate
+  nearest neighbor queries in high dimensional euclidean space with a tiny
+  index.
+\newblock {PVLDB} \textbf{8}(1), 1--12 (2014)
+
+\bibitem{Tang2016Exploit}
+Tang, B., Man, L.Y., Hua, K.A.: Exploit every bit: Effective caching for
+  high-dimensional nearest neighbor search.
+\newblock IEEE Transactions on Knowledge and Data Engineering \textbf{28}(5),
+  1175--1188 (2016)
+
+\bibitem{Tao2009LSB}
+Tao, Y., Yi, K., Sheng, C., Kalnis, P.: Quality and efficiency in high
+  dimensional nearest neighbor search.
+\newblock In: SIGMOD, pp. 563--576 (2009)
+
+\bibitem{Torralba2008}
+Torralba, A., Fergus, R., Weiss, Y.: Small codes and large image databases for
+  recognition.
+\newblock In: Computer Vision and Pattern Recognition, 2008. CVPR 2008. IEEE
+  Conference on, pp. 1--8 (2008)
+
+\bibitem{Vitter2008EM}
+Vitter, J.S.: Algorithms and data structures for external memory.
+\newblock Foundations and Trends{\textregistered} in Theoretical Computer
+  Science \textbf{2}(4), 305--474 (2008)
+
+\bibitem{Wang2012Query}
+Wang, J., Li, S.: Query-driven iterated neighborhood graph search for large
+  scale indexing.
+\newblock In: ACM International Conference on Multimedia, pp. 179--188 (2012)
+
+\bibitem{WangWSXSL15}
+Wang, J., Wang, J., Song, J., Xu, X., Shen, H.T., Li, S.: Optimized cartesian
+  k-means.
+\newblock {IEEE} Trans. Knowl. Data Eng. \textbf{27}(1), 180--192 (2015)
+
+\bibitem{WangJD2013NNGPQ}
+Wang, J., Wang, J., Zeng, G., Gan, R., Li, S., Guo, B.: Fast neighborhood graph
+  search using cartesian concatenation.
+\newblock In: IEEE International Conference on Computer Vision, pp. 2128--2135
+  (2013)
+
+\bibitem{Weber1998}
+Weber, R., Schek, H.J., Blott, S.: A quantitative analysis and performance
+  study for similarity-search methods in high-dimensional spaces.
+\newblock In: VLDB, vol.~98, pp. 194--205 (1998)
+
+\bibitem{Weiss08}
+Weiss, Y., Torralba, A., Fergus, R.: Spectral hashing.
+\newblock In: In Proc. NIPS (2008)
+
+\bibitem{Zhang2013FastkNNG}
+Zhang, Y.M., Huang, K., Geng, G., Liu, C.L.: Fast knn graph construction with
+  locality sensitive hashing.
+\newblock In: Proceedings, Part II, of the European Conference on Machine
+  Learning and Knowledge Discovery in Databases - Volume 8189, pp. 660--674
+  (2013)
+
+\end{thebibliography}

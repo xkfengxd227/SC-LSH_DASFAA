@@ -1,0 +1,1150 @@
+%%%%%%%%%%%%%%%%%%%%%%% file template.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is a general template file for the LaTeX package SVJour3
+% for Springer journals.          Springer Heidelberg 2010/09/16
+%
+% Copy it to a new file with a new name and use it as the basis
+% for your article. Delete % signs as needed.
+%
+% This template includes a few options for different layouts and
+% content for various journals. Please consult a previous issue of
+% your journal as needed.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+\RequirePackage{fix-cm}
+%
+%\documentclass{svjour3}                     % onecolumn (standard format)
+%\documentclass[smallcondensed]{svjour3}     % onecolumn (ditto)
+%\documentclass[smallextended]{svjour3}       % onecolumn (second format)
+\documentclass[twocolumn]{svjour3}          % twocolumn
+%
+\smartqed  % flush right qed marks, e.g. at end of proof
+%
+\usepackage{graphicx}
+\usepackage{mathptmx}      % use Times fonts if available on your
+\usepackage{latexsym}
+\usepackage[ruled]{algorithm2e}
+%\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathrsfs}
+\usepackage{txfonts}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{balance}
+\usepackage[misc]{ifsym}
+\usepackage{textcomp}
+\usepackage[svgnames,rgb]{xcolor}
+\usepackage{pdfcomment}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{fmtcount}   % add footnote inside a tabular
+
+\newcommand{\superscript}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\btitle}[1]{\vspace{1ex}\noindent\underline{\textbf{#1}}}
+\newcommand{\hytt}[1]{\texttt{\hyphenchar\font=\defaulthyphenchar #1}}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\newcommand{\eat}[1]{}
+\def\sharedaffiliation{%
+\end{tabular}
+\begin{tabular}{c}}
+
+\renewcommand{\algorithmcfname}{ALGORITHM}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\IncMargin{-\parindent}
+
+\hyphenpenalty=4000
+\tolerance=700
+
+\clubpenalty=10000
+\widowpenalty = 10000
+%
+% Insert the name of "your journal" with
+% \journalname{myjournal}
+%
+\begin{document}
+
+
+\title{SC-LSH: an accurate and efficient ANN solution in high-dimensional space}
+
+\subtitle{}
+
+\titlerunning{}        % if too long for running head
+
+%
+%\author{Xiaokang Feng       \and
+%        Jiangtao Cui        \and
+%        Xiaoyu Zhang        \and
+%        Yingfan Liu         \and
+%        Hui Li
+%}
+
+\authorrunning{X. Feng et al.} % if too long for running head
+
+\institute{X. Feng \and J. Cui \and X. Zhang \at
+              School of Computer Science and Technology, Xidian University, China \\
+              %Tel.: +123-45-678910\\
+              %Fax: +123-45-678910\\
+              \email{xkfengxd227@gmail.com}           %  \\
+%             \emph{Present address:} of F. Author  %  if needed
+           \and
+           J. Cui (\Letter)   \at
+                \email{cuijt@xidian.edu.cn}
+           \and
+           X. Zhang \at
+              \email{xyzhang\_rainy@126.com}
+           \and
+           Y. Liu   \at
+                Department of System Engineering and Engineering Management, Chinese University of Hong Kong, China   \\
+                \email{liuyf@se.cuhk.edu.hk}
+           \and
+           H. Li    \at
+                School of Cyber Engineering, Xidian University, China   \\
+                \email{hli@xidian.edu.cn}
+}
+
+\date{Received: date / Accepted: date}
+% The correct dates will be entered by the editor
+
+
+\maketitle
+
+\begin{abstract}
+% 高维ANN的挑战
+The dimension curse and the I/O bottleneck are two major challenges in external Approximate Nearest Neighbor (ANN) research for large-scale multimedia data applications.
+% LSH系列方法的优势：可以克服高维
+Locality Sensitive Hashing (LSH) and its variants are among the most widely adopted solutions for ANN search in high-dimensional space.
+% LSH系列方法的劣势：无法同时取得高搜索精度和高I/O效率
+However, most the state-of-the-art LSH-based methods incur an drawback: they cannot simultaneously achieve both a high search accuracy and a high I/O efficiency.
+
+% 我们提出一个简单而有效的方法解决以上问题
+To address this issue, we recommend a novel method SC-LSH (SortingCodes-LSH) based on several simple yet effective measures.
+% 以线序的方法为框架，首先通过部署一种新的线序增强局部分布性
+Firstly, we intensify a sorting-keys strategy by employing a better linear order to optimize the local distribution of the candidates.
+% 其次，我们用紧凑编码代替原始数据进行存放与候选点精炼
+Then, we replace the original data points with compact binary codes to do candidate refining since they will bring a great enlargement to the capacity of candidates in a disk page, which enables us acquire significantly candidate codes via much less I/O operations. With the good similarity preserving ability, these codes are precise enough to discriminate nearest neighbors and thus the accuracy can be ensured.
+
+Empirical study on real-world datasets has demonstrated the superiority of SC-LSH in both the I/O efficiency and accuracy of ANN search compared with state-of-the-art LSH-based methods, including C2LSH, SK-LSH, QALSH and SRS.
+
+\keywords{Locality Sensitive Hashing \and Compact Binary Codes \and Indexing Method}
+\end{abstract}
+
+
+%======================================================================================================
+\section{Introduction}\label{sec:introduction}
+%======================================================================================================
+% NN search's background, feature vector, curse, ANN
+Nearest Neighbor (NN) search in Euclidean space is a fundamental paradigm in many multimedia information retrieval applications. The majority of multimedia data, such as images, audio and video clips can be represented as high-dimensional local/global feature vectors~\cite{Datta2008}. Thus, finding a multimedia object that is similar to a given query is converted to an NN search in the corresponding feature vector space, which aims at returning sufficiently close vector (or point) to the query vector according to a particular distance measure~\cite{Hjaltason2003}. Due to the notorious ``Curse of Dimensionality'', the performance of most existing methods~\cite{Berchtold1996,Katayama1997,White1996} for exact nearest neighbor (ENN) search decreases as the dimensionality increases and is even outperformed by the brute-force approach, linear-scan~\cite{Bohm2000,Weber1998}. To find an efficient solution to NN search, many researchers have been focusing on Approximate Nearest Neighbor (ANN) search recently, which aims to return a point \emph{close enough} to a query point instead of the closest one.
+
+% LSH, its mechanism, its variants
+Locality Sensitive Hashing (LSH) has been shown to be one of the most promising solution over ANN search (concretely the $c$-ANN problem). It employs distance-preserving hash functions to project nearby points into same bucket with high probability~\cite{Gionis1999,Indyk1998LSH} which enables fast and accurate irrelevant points filtration with barely no pre-processing. Associated with the construction of compound hash functions and/or multiple hash tables, researchers can effectively reduce the false positives~(FP) and false negatives~(FN). Based on that, plenty of effective methods have been developed to further boost more ANN search performances, such as the accuracy (LSB-tree~\cite{Tao2009LSB}, C2LSH~\cite{Gan2012C2LSH} and QALSH~\cite{Huang2015QALSH}), the I/O efficiency (SortingKeys-LSH or SK-LSH~\cite{Liu2014SKLSH}) and the space consumption to scale well in large-scale datasets (SRS\cite{Sun2014SRS}).
+
+% LSH方法的不足及其各自表现：
+A common limitation of most the state-of-the-art LSH methods is that they cannot simultaneously achieve a high accuracy as well as high efficiency (especially the I/O efficiency).
+% 追求精度的方法
+Most the methods that pursuit high search quality (such as C2LSH, QALSH and SRS) need to load and verify sufficient data objects which unavoidably consume enormous random I/O operations.
+% 优化IO的方法
+Some others (SK-LSH, etc.) attempt to enhance the local distribution of the candidates so as to load more high-quality candidates during a single page access as well as improving the disk access manner (more sequential I/O, less random ones). However, they unfortunately endure poor scalability with high dimensions. Since the page size $B$ is usually constant, as the dimensionality grows, less candidates can be hold in a single disk page, which turns them ultimately back to resort to more disk page access to guarantee the search accuracy.
+
+% 我们的方法：目的、两项举措的介绍与分析
+In this paper, we propose several simple yet effective measures to address the above issue and thus guarantee both a high search accuracy as well as a high I/O efficiency.
+
+% 线序的有效性，我们作为基本框架
+Firstly, we take the sorting-keys strategy suggested in SK-LSH as the basic infrastructure of our method since it does work in improving the I/O performance of ANN search.
+% ① 线序的改善分析
+However, the linear order employed in SK-LSH (i.e. the row-wise order) is not the best. Its ``dimension-first-traverse" property tends to introduce more false positives during the local rearrangement which makes it not able to adequately optimize the local distribution of the candidates. As a result, SK-LSH has to construct more hashing functions to boost the search accuracy. This is also why the ANN search performance in SK-LSH is very sensitive to the width $W$ of the hashing functions because larger $W$ tends to capture more true positives at the beginning than smaller ones to make up the disadvantage of the linear order.
+
+% ① 我们的改善措施
+We decide to improve the linear order for compound hash keys sorting, in order to intensify the local distribution of the candidates. We make a thorough investigation of how mechanisms of different space-filling curves affect the local distribution of NN candidates, and finally choose a linear order with the ``neighbor-first-traverse" property, the Gray order suggested by Faloutsos in~\cite{Faloutsos1986Gray} It is also an improvement of another ``neighbor-first-traverse" order, the z-ordering curve according to~\cite{Moon2001SFCClustering} which has a better clustering ability and can maintain more candidates within same disk pages, which can not only enhance the I/O efficiency but also improve the ANN search accuracy.
+
+% 另一种措施
+Another measure we take in our method is that we no longer maintain any original data points in the index. Instead, we store compact binary codes and load them to do candidate refining during the ANN search.
+% 起因
+All along, for the need of candidates refining, most LSH-based methods have to maintain one or more copies of the original data points in the index because the true distances between the query and the original data points are the most accurate reference to discriminate nearest neighbor. However, in most cases, they have become the major storage overhead of the index structure and also made the cost of loading and distance computing on candidate points cannot be underestimated. Besides, they are the immediate cause that limit the scalability of the I/O performance improving attempts in high dimensions as mentioned above. In a word, the original data is not the best choice in consideration of elevating both the accuracy and the I/O efficiency.
+
+% 一种新的编码技术
+Actually, what we truly need in the candidate refining phrase does not have to be the original distance value but the ability of discriminating nearest neighbors. The compact binary coding technique is a very space efficient way that can also preserve the similarity among the original data points. It is a kind of quantization technique which learns similarity-preserving binary codes to encode high-dimensional data points~\cite{Gong2011,Torralba2008,Weiss08}. The most promising work resides in the research of product quantization (PQ)-based approaches, whose key idea is to decompose the original vector space into Cartesian product of $M$~(e.g., $M=8$) low-dimensional subspaces and quantize each subspace into $C$~(e.g., $C=256$) codewords. In this way, the effective number of codewords in the original space becomes $C^M$~(i.e., $256^8$), sufficient enough to guarantee a relative good similarity-preserving. Besides, the cost of storing each data code is merely $M\log_2{C}$~(i.e., 64 bits) no matter the data dimensions. Therefore, maintaining compact binary codes could bring a great enlargement on the capacity of candidates of each disk pages which will enable us acquire significantly candidates via less I/O operations. With the good similarity preserving ability, they are precise enough to discriminate nearest neighbors during the candidate refining to ensure the search accuracy. Besides, this nearly constant space occupation of the data codes will also help us get rid of the limitation on I/O efficiency in high dimensions.
+
+% 总结
+In summary, we introduce a novel method SortingCodes-LSH (SC-LSH for short) in this paper to simultaneously boost the accuracy and the efficiency (especially the I/O efficiency) of ANN search. For the I/O efficiency, we first implement a sorting-keys strategy to turn random I/O consumption into sequential ones. Then we conduct a better liner order, the Gray order to intensify the local distribution of the candidates so as to further reduce the I/O cost and meanwhile enhance the robustness of the algorithm in terms of the parameters. The introduction of the compact binary codes will help us retain or even lift the search accuracy owing to its excellent space efficiency which is able to provide us with sufficient data codes with relative good similarity-preserving as candidates via much fewer I/O operations.
+
+% 结构
+%【文章结构】
+The rest of this paper is organized as follows. We introduce necessary preliminaries in Section \ref{sec:pre}, and then give an overview of the technology roadmap our method in Section \ref{sec:overview}. Detailed descriptions of SC-LSH are presented in Section \ref{sec:sclsh}. Section \ref{sec:er} describes the experimental studies. Related work is discussed in Section \ref{sec:rw}. Finally, we conclude our work in Section \ref{sec:con}.
+
+\section{Preliminaries}\label{sec:pre}
+This section gives some necessary preliminaries. First we give the definitions of ANN search and LSH as well as the analysis about the ANN search mechanism with LSH. Then we introduce the development of LSH-based methods, including both the attempts to boost the accuracy and the efficiency.
+
+\subsection{Problem definition}\label{subsec:ann}
+Given a dataset $\textbf{D} \subset \mathbb{R}^{d}$ and a query point $q$, the target of NN problem is to find the point $o^{\ast} \in \textbf{D}$ satisfying that for any point $p \in \textbf{D}$, $\left\|{o^{\ast},q}\right\| \leq \left\|{p,q}\right\|$, where $\left\|{\cdot,\cdot}\right\|$ denotes the Euclidean distance between two points. In this paper, we focus on $c$-ANN, the popular approximate version of NN problem, which aims at finding a point $o \in \textbf{D}$ that satisfies $\left\| {o,q} \right\| \le c\left\| {o^{*},q} \right\|$. Here, $c$ is the approximation ratio, which exceeds 1.
+
+\subsection{Locality Sensitive Hashing}\label{sec:lsh}
+\subsubsection{Definition}
+To solve the $c$-ANN problem, Indyk and Motwani proposed the idea of LSH~\cite{Indyk1998}, which can ensure that a close pair collides with each other with a high probability and a far pair with a low probability. This property of LSH is also called distance-preserving. Here is a formal definition.
+\begin{definition}
+\label{def:LSH}
+(\textbf{Locality Sensitive Hashing}) Given a distance $R$, an approximate ratio $c$ and two probability values $\mathbb{P}_1$ and $\mathbb{P}_2$, a hash function $h: \mathbb{R}^d \to \mathbb{Z}$ is called \textbf{$(R,c,\mathbb{P}_1,\mathbb{P}_2)$-sensitive} if it satisfies the following conditions simultaneously for any two points $o_1,o_2 \in \textbf{D}$:
+\begin{description}
+\item[$\bullet$] If $\left\|{o_1,o_2}\right\| \leq R$, then $Pr[h(o_1)=h(o_2)] \geq \mathbb{P}_1$;
+
+\item[$\bullet$] If $\left\|{o_1,o_2}\right\| \geq cR$, then $Pr[h(o_1)=h(o_2)] \leq \mathbb{P}_2$;
+\end{description}
+To make sense, both $c > 1$ and $\mathbb{P}_1 \geq \mathbb{P}_2$ hold.
+\end{definition}
+
+Equation \ref{Eq:lsh} shows a commonly used LSH function in Euclidean Space, which was proposed by Datar et al.~\cite{Datar2004}.
+\begin{equation}
+h(o) = \lfloor \frac{a \cdot o + b}{W} \rfloor
+\label{Eq:lsh}
+\end{equation}
+Here, $o$ is an arbitrary point in $\textbf{D}$. $a$ is a random vector with each dimension independently chosen from a Gaussian distribution. $W$ is a real number representing the width of the LSH function and $b$ is a real number uniformly drawn from the range [0,W). For two points $o_1$, $o_2$ and an LSH function $h$, if $\left\|{o_1 , o_2}\right\| = r$, the probability of $h(o_1)=h(o_2)$ can be computed as follows~\cite{Datar2004}.
+\begin{equation}
+\label{eq:p(r,w)}
+\begin{array}{ll}
+p(r,W) &= Pr[h(o_1)=h(o_2)] \\
+       &= \int_0^W \frac{1}{r}f_2(\frac{t}{r})(1-\frac{t}{W})dt \\
+       &= 2norm(W/r) - 1 - \frac{2}{\sqrt{2\pi}}\frac{r}{W}(1-e^{-\frac{W^2}{2r^2}})
+\end{array}
+\end{equation}
+Here, $f_2(x)=\frac{2}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$ and $norm(\cdot)$ represents the cumulative distribution function of a random variable following Gaussian Distribution. According to Equation \ref{eq:p(r,w)}, the probability $p(r,W)$ decreases monotonically when $r$ increases but grows monotonically when $W$ rises.
+
+\subsubsection{Candidate mechanism}
+% LSH的候选点机制：从单个到多个
+Due to the distance-preserving property of LSH, data points that are distant from each other are less likely to collide and thus be filtered out, while closer pairs are retained with high probability and become NN candidate. Based on this idea, several approaches have been proposed for $c$-ANN~\cite{Datar2004, Gan2012, Gionis1999, Lv2007, Tao2009}. However, it is obvious that Equation \ref{Eq:lsh} exhibits poor performance in filtering candidate points, as many pairs, which are distant from each other, may share the same hash value under a single hash function. In other words, numerous false positives may be returned. To remove the irrelevant points (i.e., false positives), a \textbf{compound LSH function} $G=(h_1,h_2, \ldots, h_m)$ is employed so as to improve the distinguishing capacity of a single LSH function. Note that each element of a compound LSH function, $h_i$, is randomly selected as defined in Equation \ref{Eq:lsh}. Specifically, for $\forall o\in \textbf{D}$, $K=G(o)=(h_1(o), \ldots, h_m(o))$ is defined as the \textbf{compound hash key} of point $o$ under $G$.
+%【Original LSH机制】
+The basic LSH~\cite{Datar2004} suggests only points sharing all the $m$ hash values with the query point should be taken into account as candidate points. This is too strict to return enough number of result points, therefore multiple compound hash functions has to built to make up with each other. Originally, hundreds or thousands compound hash functions are constructed, since one compound hash function corresponds to one hash table, the total storage consumes an extremely high amount of space which seriously affect the scalability and usage in high-dimensional data space.
+
+%【一些改善LSH的方法及其缺陷】
+To address this problem, more $c$-ANN search algorithms begin to identify candidates by evaluating similarity over compound hash keys. They either directly probe the neighbor buckets, such as Entropy-LSH, multi-probe LSH, etc. or define a distance measurement over compound hash keys, such as LSB, C2LSH, SK-LSH, SRS, QALSH, etc. However, most of these methods collect their candidates among a large number of hash structures, and their candidates are distributed among different disk pages. Thus, a large number of I/Os are unavoidable in order to obtain sufficient candidates to guarantee the satisfactory accuracy of the returned results.
+
+\subsection{the sorting-keys strategy}
+% 【总结下改善I/O的入手点，引出SK】
+Intuitively, there are two methods to improve the I/O efficiency, 1) reduce the number of necessary I/O operations via enhancing the filtration capacity, and 2) improve both the I/O manner and the loading efficiency of one single I/O by adjusting the candidate distribution. Recently, Liu et al. proposed a sorting-keys strategy SK-LSH which can fulfill both the above requirements with the help of linear orders.
+
+% 【空间曲线是什么样子】
+Linear orders are defined by space-filling curves~\footnote{In the following contents, we will use the term linear order and space-filling curves interchangeably.}. The latter is a kind of virtual curve manually constructed in the multidimensional space which can project the multidimensional space into one-dimensional integer keys. The space is firstly divided into equal-sized cells, each cell is then given a unique id, the ascending order of the ids is the linear order stipulated by the curve. An important advantage of space-filling curves is that they are practically insensitive to the number of dimensions if the one-dimensional keys can be arbitrarily large. Everything is mapped into one-dimensional space which makes a lot of one-dimensional access methods, such as B tree, B+ tree can be applied to manage the data.
+
+% 【常用的空间曲线】
+Common used space-filling curves include the row-wise curve, the z-order curve, the Gray curve and the Hilbert curve~\cite{18}. Fig.\ref{fig:sfc} shows some kinds of them. Generally, all these curves share a common property: neighbor grids along the curves are more likely to be neighbors in the original space. This is called the ``clustering property" of space-filling curves. If one stores the data objects on the disk according to their linear orders, it is more likely to load NN candidates via sequential disk operations.
+\begin{figure*}
+  \centering
+  % Requires \usepackage{graphicx}
+  \includegraphics[width=0.75\textwidth]{linear-order.pdf}\\
+  \caption{Different kinds of space-filling curves}\label{fig:sfc}
+\end{figure*}
+
+% 【sorting-keys的框架及其效果】
+In the sorting-keys strategy, SK-LSH chooses to rearrange the compound hash keys under a kind of row-wise curve to optimize the local distribution of candidates, because the compound LSH keys can well preserve the similarity among original data points. As a result, neighboring candidates are stored on the same or adjacent disk pages. It then defines a distance measure between compound hash keys to estimate the true distance between data points. During ANN search, a limited number of pages on the disk, which are ``close" to the query in terms of the distance defined between compound hash keys, are needed to be accessed for sufficient candidate generation, leading to much shorter response time due to the reduction of random I/O operations, yet with higher search accuracy.
+
+
+\section{Overview of our method}\label{sec:overview}
+In this section, we make a full explanation about the technology roadmap of SC-LSH.
+
+\subsection{sorting keys with optimized linear order}\label{subsec:linearorder}
+% sorting-keys作为基本框架
+Firstly, we take the sorting-keys strategy as the basic infrastructure of SC-LSH since it does help to improve the I/O performance, including both the I/O amount reduction and the I/O manner improving.
+% 线序的选择有待商榷
+As for the choice of the linear order, we find that there are different kinds of space linear orders with different properties, and these properties have different effects on the local distribution of candidates.
+
+\subsubsection{Mechanisms of space-filling curves}
+% 曲线分类
+Generally, we can divide the space-filling curves into two categories, dimension-first-traverse curves and neighbor-first-traverse curves, according to their differences in setting up the priority of space filling. We list several samples of space-filling curves in Fig. \ref{fig:sfc}.
+
+Fig. \ref{fig:sfc}(a) depicts a kind of dimension-first-traverse curve, the row-wise curve, which is the curve employed in SK-LSH. Fig. \ref{fig:sfc}(c,d,e) are three kinds of neighbor-first-traverse curves, the z-ordering, the Gray curve and the Hilbert curve, respectively.
+
+We can see clearly the differences on the priority they set for which to first traverse between these two categories of curves. For the row-wise curve, it specifies different priorities among different dimensions and will first traverse dimensions with higher priorities. Only when it goes through all the grids along the higher priority dimension, will it turn to the dimension with sub high priority to shift one step forward. After that, it turns back to the higher priority dimension and continues the filling. Suppose $(x, y)$ denotes the coordinate of a two-dimensional grid, and the X dimension has higher priority than the X dimension. Its order on the curve will be $(x+y \cdot dim)$, where $dim$ represents the total coordinates along the X dimension.
+% The row-wise order is also called the alphabet order. Perhaps it is the most simplest yet most widest-used space linear order.
+
+Neighbor-first-traverse curves will first fill up a small local space, after that, they expand to a larger neighbor area and continue the filling. Usually, it exhibits an obvious recursion trend of a pre-defined filling logic during the expansion. Taking the Gray curve in Fig. \ref{fig:sfc}b as an example, the filling order conducted in the lower left 2$\times$2 grids is also the order to fill up the larger space when zooming in the whole 4$\times$4 grids as a bigger 2$\times$2 grids space as shown in Fig. \ref{fig:sfc}(b).
+
+\subsubsection{A better linear order}
+% 曲线性能对候选点分布的影响
+SK-LSH does not conduct further study on how different mechanisms of space linear order affect the distribution of the candidates, it chooses the row-wise curve with dimension-first-traverse property.
+In fact, since the nearest neighbors are usually distributed around the query point, the neighbor-first-traverse mechanism is more tally with the principle of nearest neighbor seeking.
+
+% 举例说明
+To make a clear illustration, we choose the row-wise curve and the Gray curve to represent this two categories, and compare them in a simple nearest neighbor search experiment. As shown in Fig. \ref{fig:nncompare}, $O$ is the query point, $\{A, B, C\}$ are its three nearest neighbors. Without loss of generality, we suppose that there are plenty of data points in the whole space and the data points in each grid will occupy one disk page. As for $A, B, C$, they respectively belong to three grids centered with a bigger black points as shown in the figure. We firstly store all the data points to the disk along the linear orders of the grids they located in. During the search, we start from the grid where $O$ falls in and expand bidirectionally to load the disk pages to check until we reach all the three true nearest neighbors. We compare how many grids (or disk pages) need to be accessed along each of the linear order before all these nearest neighbors are found.
+\begin{figure}
+  \centering
+  % Requires \usepackage{graphicx}
+  \includegraphics[width=0.45\textwidth]{order-compare.pdf}\\
+  \caption{NN search on two kinds of linear orders}\label{fig:nncompare}
+\end{figure}
+
+As can be seen, on the row-wise curve, $\{A, B, C\}$ are $\{8, 8, 1\}$ grids away from $O$ respectively, and we need to visit totally 17 grids to reach all of them. As for the Gray curve, they live $\{1, 3, 1\}$ grids away from $O$ along the linear order and we only need to visit 5 grids totally to load them all, much less than 17.
+
+The main reason of such a notable gap is that both $A$ and $B$ are not located on the higher priority dimension of the row-wise curve, therefore, they have to wait for one complete traverse along the other dimension before being accessed. A miss is as good as a mile. And this could be more common in higher-dimensional space. As for the Gray curve, no matter how many dimensions there are, the curve will always traverse the neighborhood first, once located precisely at the nearby to start, more neighbors will always be visited soon in fewer steps. All these above indicate that the neighbor-first-traverse curves have better local rearrangement for the NN candidates than dimension-first-traverse curves, which can help to further reduce the amount of I/O operations during the ANN search.
+% 另一种结论
+% Therefore, different mechanisms of space-filling curves do have different effects on the distribution of NN candidates. Actually, this is more obvious in high-dimensional space.
+
+% row-wise的另一个缺点
+Beside the inadequate effect on the local distribution in employing the row-wise curve, we encounter another small flaw of SK-LSH. We find in practical experiments that the ANN search accuracy of SK-LSH is very sensitive to the interval width $W$ of the LSH functions and particularly prefers to larger $W$s.
+% row-wise带来的后果-较大的W，较多的m
+After a thorough analysis we find that this is also caused by the characteristic of the row-wise order. Since the row-wise curve is dimension-first-traverse, it can only capture a limited part of the real neighbors in the local neighborhood, much of the rest are missed. To ensure the query accuracy, SK-LSH has to enlarge the interval width so that can \emph{catches} those missed neighbors \emph{back} earlier. However, enlarging the interval width $W$ will increase the collision probability of two distant points according to Equation \ref{eq:p(r,w)}, which means more false positives will be introduced into the candidate set and thus reduce the query accuracy. As a result, more LSH functions have to built to adequately filter out these false positives, which finally increases the index overhead and degrades the query efficiency.
+
+% 使用邻域线序可以很好地避开这一问题
+All these problems above can be relieved by employing neighbor-first-traverse linear orders. Because this kind of curve can index more neighbor points earlier when traversing the local neighborhood so that less false positives can be interfused in the candidate set with only a few LSH functions are enough to filter out.
+% 我们的决定，选择
+Therefore, in our SC-LSH method, we choose a kind of neighbor-first-traverse space-filling curve for compound hash keys rearranging so as to optimize the local distribution of candidates and thus improve the I/O efficiency as well as lifting the nearest neighbor search accuracy. Actually, we have possibly three options, the z-ordering, the Gray curve and the Hilbert curve. We finally choose the Gray order. Although the Hilbert curve achieves the best clustering property to preserve the locality of data points as reported in~\cite{Faloutsos1989Fractals}, it is somewhat difficult to implement in the dimensions of the compound hash keys we need in SC-LSH. The Gray curve achieves the second-best clustering property among them three, but is as easily to implement as the z-ordering.
+
+\subsection{Candidate refining with compact binary codes}
+\label{ssec:introPQ}
+\subsubsection{Limitations of maintaining original data}\label{sssec:originallimitations}
+% 原始数据维护带来的问题
+Most LSH-based variants need to maintain one or more, sometimes hundreds or thousands, copies of original data points due to the need of discriminating real NNs from the candidate set in the refining phase. However, this will sometimes become another typical limitation of LSH based methods, which concretely speaking, mainly resides in two aspects.
+\begin{description}
+  \item[$\bullet$] \textbf{Expensive space consumption} The space complexity of one copy of the original data points is $O(nd)$, for large scale high-dimensional dataset, this is very expensive and sometimes becomes the major space consumption of the index.
+  \item[$\bullet$] % 去掉了SK-LSH的举例
+    \textbf{Degrading the I/O scalability} The maintenance of original data points will also degrade the I/O scalability in terms of dimensionality of some methods devoting for I/O efficiency improving. Suppose that a dataset $\textbf{D}\subset R^d$ resides in the external memory where each page occupies $B$ \emph{word}s. Then each page can hold nearly $V=B/d$ data points. To guarantee the ANN search accuracy, we often need to load sufficient candidate points. Without loss of generality, suppose that we load $\gamma$ points for each query, then the total number of disk pages we need to access is nearly $N_P=\gamma d/B=O(d)$, which means the I/O cost is linearly proportional to the dimensionality. That is a poor scalability for external indexings.
+\end{description}
+
+% 对维护原始点提出疑问
+The question is, do we really have to keep the original data points in the index structure? The answer resides in the usage of them, i.e., we keep real data points because they can provide us with accurate distances between the candidates points and the query. These distances provide us with references to judge the quality of a candidate and find out the real nearest neighbors.
+%It is natural that the more accurate the distance is, the more precise nearest neighbors we get.
+Hence, in fact, the actual point we care about is not the original distance value, but the ability of discriminating nearest neighbors. In other words, if we can find a space efficient way that can preserve the similarity among real data points, we can avoid storing them and thus address the aforementioned limitations. Fortunately, the compact binary coding techniques can fulfill both the above requirements.
+
+\subsubsection{Effect of compact binary codes}\label{ssec:compact}
+% 紧凑编码技术的发展概述，代表技术
+In recent years, the computer vision community has witnessed rapid progress in learning similarity-preserving binary codes to encode high-dimensional data points into compact binary codes~\cite{Gong2011,Torralba2008,Weiss08}. These codes could bring large efficiency gains in storage while preserving the similarity among the original data points. The most promising work resides in the research of product quantization (PQ)-based approaches, including the original product quantization ~\cite{Jegou2011}, the product quantization with inverted multi-index ~\cite{Babenko2012Inverted}, the Cartesian K-Means (CK-Means) ~\cite{Norouzi2013} and the Optimized Cartesian K-Means method ~\cite{WangWSXSL15}.
+
+%% PQ的原理
+% 对量化中心的需要，原始VQ无法满足
+As a quantization technique, PQ is derived from vector quantization (VQ), which reduces the representation space to a codebook $\textbf{C}$ composed of $\mathbb{K}$ codewords (or centroids) $\{c_i\}_{=1}^\mathbb{K}$ generated from clustering algorithms. A data point $p\in \textbf{D}$ is mapped into its nearest centroid under the Lloyd optimality conditions in terms of Euclidean distance
+\begin{equation}
+\label{eq:vqmap}
+\pi \left( p \right) = \mathop {\arg \min }\limits_{{c_i} \in \textbf{C}} \left\| {p,{c_i}} \right\|_2
+\end{equation}
+Here, $\pi(\cdot)$ is the quantizer, $\left\|,\right\|_2$ indicates the Euclidean distance and the index $i$ can be seen as the quantized code of $p$. For any two points $o_i,o_j\in \textbf{D}$, their distance can be estimated according to the quantized codes, i.e., $\left\|{o_i,o_j}\right\|_2 \approx \left\|{\pi(o_i),\pi(o_j)}\right\|_2$. For vector quantization, to obtain precise estimated distances, the quantization error must be limited. Therefore, the total number $\mathcal{K}$ of centroids should be sufficiently large. However, for typical vector quantization techniques, such as K-Means and hierarchical K-Means (HKM), one issue is the scalability of codebook. It is hard for them to scale to large $\mathcal{K}$ (e.g. $\mathcal{K}=2^{64}$) since both the codebook storage and data point assignments become untenable.
+
+% PQ的做法
+PQ successfully addresses this issue with a model of compositional parameterization of cluster centroids. Suppose that $d$ is a multiple of $\mathcal{M}$ and $\mathcal{S}=d/\mathcal{M}$. In PQ-based methods, the data space is firstly decomposed into a Cartesian product of $\mathcal{M}$ $\mathcal{S}$-dimensional subspaces, and each data point $p\in \textbf{D}$ can be seen as a concatenation of $\mathcal{M}$ disjoint $\mathcal{S}$-dimensional sub vectors $u_j(p)$, $1\le j \le \mathcal{M}$:
+$$
+p = \underbrace {{o_1}, \ldots ,{o_\mathcal{S}}}_{{u_1}\left( p \right)}, \ldots ,\underbrace {{o_{d - \mathcal{S} + 1}}, \ldots ,{o_d}}_{{u_{M}\left( p \right)}}
+$$
+Then, K-Means is performed to obtain a sub codebook containing $\kappa$ sub codewords on each subspace. By this means, a codebook $\textbf{C}$ containing $\kappa^\mathcal{M}$ centroids is generated using the Cartesian product of these sub codebooks:
+$$
+\textbf{C}=\textbf{C}_1 \times \ldots \times \textbf{C}_{\mathcal{M}}
+$$
+Note that the storage of the codebook $\textbf{C}$ is only $O(\kappa d)$, while K-Means requires $O(\kappa^\mathcal{M}d)$ storage with the same number of centroids. Using these sub codebooks, a data point $p$ can be mapped as follows:
+$$
+\begin{array}{*{20}{l}}
+{p \to \pi \left( p \right)}& = &{\left( {{\pi _1}\left( {{u_1}\left( p \right)} \right), \ldots ,{\pi _\mathcal{M}}\left( {{u_\mathcal{M}}\left( p \right)} \right)} \right)}\\
+{}& = &{\left( {{\textbf{C}_1}[{i_1}], \ldots ,{\textbf{C}_\mathcal{M}}[{i_\mathcal{M}}]} \right)}
+\end{array}
+$$
+Here, $\pi_j(\cdot)$ is the subquantizer in the $j$-th subspace. By concatenating the indexes of the $\mathcal{M}$ centroids returned by the $\mathcal{M}$ subquantizers, we can encode the data point $p$ into a compact PQ code:
+$$
+Q\left( p \right) = \left( {{i_1}, \ldots ,{i_M}} \right)
+$$
+Note that the time complexity of the data point encoding is reduced from $O(\kappa^\mathcal{M}d)$ in K-Means to $O(\kappa d)$ here. Besides, $\kappa$ is usually set to be a power of 2. Let $\mathcal{U}=\log_2\kappa$, each PQ code is thus a $\mathcal{UM}$-bit binary string which will occupy $s=\mathcal{UM}/32$ machine words in total.
+
+% 距离计算方式
+In addition to the high estimation precision, PQ conducts a kind of \emph{asymmetric quantizer distance (AQD)} to estimate the square distance between a data point $p$ and the query vector $q$ without quantizing $q$:
+\begin{equation}
+\label{eq:aqd}
+\left\| {q,p} \right\|_2^2 \approx \left\| {q,\pi \left( p \right)} \right\|_2^2 = \sum\limits_{j = 1}^M {\left\| {{u_j}\left( q \right),{C_j}\left[ {{i_j}} \right]} \right\|_2^2}
+\end{equation}
+This can be done efficiently with the help of a pre-computed lookup table. According to Equation \ref{eq:aqd}, by pre-computing all the square distances between each sub query vectors $u_j(q)$ and the sub codewords in the $j$-th sub codebook $\textbf{C}_j$, the AQD square distance computation between $p$ and $q$ is transformed into a table lookuping with the PQ code components in $Q(p)$ as the indexes. By reference of \cite{andre2015cachePQ}, we depict this procedure vividly in Figure \ref{fig:lookup}, where we generate 64-bit PQ codes with $\mathcal{M}=8$ and $\kappa=256$.
+\begin{figure}[t]
+\begin{center}
+{
+\includegraphics[width=0.49\textwidth]{lookup.pdf}
+}
+\end{center}
+\caption{Illustration of distance estimation using a lookup table}
+\label{fig:lookup}
+\end{figure}
+
+% 介绍使用了紧凑编码后的效果
+As can be seen, the compact binary codes, especially the PQ series are space efficient, and their sufficiently high quantization accuracy are good enough to discriminating real nearest neighbors from the candidate set. Therefore, in SC-LSH, we no longer maintain the original data points but store compact binary codes to do candidates refining.
+% 具体使用的编码
+More specifically, we focus on product quantizers with $2^{64}$ centroids, which means each PQ code occupies 64-bit storage. According to the performance estimation conducted in \cite{Jegou2011PQ} and \cite{Norouzi2013}, the 64-bit long codes are good enough to produce sufficiently high quantization accuracy for most typical high-dimensional datasets, especially for the datasets chosen in our experiments in Section \ref{sec:expresult}. The constant 64-bit (or 2 words) storage means a compression ratio of $d/2$ (suppose that each component of the data vectors is a one word long integer/float) of the storage of the original data set. Besides, each disk page now can hold $B/2$ data items, not only gets rid of the limitation from the dimensionality $d$, but also be enlarged to a big constant. Therefore, a few page accesses are much enough to load sufficient candidates. In conclusion, both the two limitations caused by maintaining original data points (mentioned at the beginning of Section \ref{sssec:originallimitations}) will be eliminated.
+
+\section{SC-LSH}\label{sec:sclsh}
+In this section, we introduce all the necessary details in SC-LSH for ANN search, including the linear order deploying, the indexing construction and the ANN search algorithm.
+
+\subsection{Gray order over compound hash keys}\label{ssec:linearorder}
+We choose the Gray curve to be the linear order conducted over the compound hash keys in SC-LSH. We firstly make some definitions necessary to guide the rearrangement.
+
+\begin{definition}
+\label{def:g-order}
+(\textbf{G value}) The Gray curve projects the data in the $I^m$ space to an integer in $I$, denoted as $G:I^m\rightarrow I$. For a data point $o\in \textbf{D} \subset R^d$, let $K=\{k_i\}_{=1}^m=\mathcal{G}(o), k_i \in I$ denotes the compound hash key of $o$ under a compound hash function $\mathcal{G}$ which consists of $m$ LSH functions. $G(o)$ is called the \emph{G value} of $o$. According to \cite{Faloutsos1989Fractals}, the computing of G value mainly consists of three steps, all of which are easy to implement.
+\end{definition}
+
+% 对m维复合哈希键值的编码过程
+% For any data point $o\in \textbf{D} \subset R^d$, $K=\{k_i\}_{=1}^m=\mathcal{G}(o)$ denotes the compound hash key of $o$ under the compound hash function $\mathcal{G}$ which consists of $m$ LSH functions. We can compute the G value of $o$ under $\mathcal{G}$ as follows. Firstly, we represent each component $k_i$ of $K$ as a $u$-bit long binary string, then we interleave all the binary string following the method depicted in Fig. \ref{fig:zordering} and we will get a $um$-bit long binary string, the decimal value of this binary string is the Z value $Z(o)$ of point $o$.
+
+\begin{definition}
+\label{def:zprefix}
+(\textbf{Prefix of G values }) Given a data point $o\in R^d$ and its G value $G(o)=g_1g_2\cdots g_S$ where $S=um$ is the length of the G value, let $l$ denote the length of the prefix, we define the prefix of the G value as:
+\begin{equation}
+\label{eq:zprefix}
+pref(G,l)=(g_1g_2\cdots g_l)
+\end{equation}
+\end{definition}
+
+\begin{definition}
+\label{def:gncpl}
+(\textbf{Length of the non-common prefix of G values}) Given two G values $G_1=(g_{1,1}g_{1,2}\cdots g_{1,S})$ and $G_2=(g_{2,1}g_{2,2}\cdots g_{2,S})$, if $pref(G_1,l)=pref(G_2,l)$ and $pref(G_1,l+1)\neq pref(G_2, l+1)$, then we can define the length of the non-common prefix between $G_1, G_2$ as:
+\begin{equation}
+\label{eq:gncpl}
+NL(G_1,G_2)=S-l
+\end{equation}
+Specially, if $pref(G_1,S)=pref(G_2,S)$, we have $NL(G_1,G_2)=0$.
+\end{definition}
+
+\begin{definition}
+\label{def:gdis}
+(\textbf{Distance over G values}) For two data points $o_1, o_2 \in \textbf{D}$, we define the distance between their G values $G_1,G_2$ as follows:
+\begin{equation}
+\label{eq:gdis}
+dist_G(G_1,G_2)=NL(G_1,G_2)
+\end{equation}
+\end{definition}
+
+\begin{definition}
+\label{def:gpartial}
+(\textbf{Partial order over G values}) For two data points $o_1, o_2 \in \textbf{D}$, we define a partial order $\langle G, \leq_O \rangle$ for their G values $G_1,G_2$:
+\begin{equation}\label{eq:gpartialorder}
+\left\{ {\begin{array}{ll}
+{G_1<_O G_2,} & {if\ l<S\ and\ g_{1,l+1}<g_{2,l+1}} \\
+{G_1=_O G_2,} & {if\ l=S}\\
+{G_2<_O G_1,} & {if\ l<S\ and\ g_{1,l+1}>g_{2,l+1}}
+\end{array}} \right.
+\end{equation}
+here, $l=S-NL(G_1,G_2)$.
+\end{definition}
+
+\subsection{Indexing}\label{ssec:indexing}
+In SC-LSH, all the data are deposited in $\mathcal{L}$ hash tables, and each hash table contains totally three kinds of data, a G value set of the original data, a PQ code set of the original data and a sorted ID list of the original data points. Note that, there are several other kinds of data, including the original data points and the compound hash keys which we are certain to generate, however all of them will only appear in the intermediate process of the index building, we do not finally maintain them in the index structure.
+
+Fig. \ref{fig:indexing} depicts the construction procedure of the index structure. Overall, it consists of three phases, the linear order phase, the codes-sorting phase and the tree-building phase.
+\begin{figure}
+  \centering
+  % Requires \usepackage{graphicx}
+  \includegraphics[width=0.45\textwidth]{indexing.pdf}\\
+  \caption{Index construction}\label{fig:indexing}
+\end{figure}
+
+In the linear order phase, we firstly generate the compound hash key set $\textbf{K}$ for all data points in $\textbf{D}$ under a compound hash function $\mathcal{G}$. Then we convert them into G values and get the corresponding G value set $\textbf{G}$. Next, we sort all the G values in ascending order according to the linear order defined in Equation \ref{eq:linearorder} and get a sorted G value set $G’$ together with the sorted id list $\textbf{ID}'$ of the original data points.
+% 数据点ID的来历, note that the ID of a data point is just its sequence number in the original data set $\textbf{D}$ which is started from 0.
+
+After we get the sorted G values, we come into the codes-sorting phase, in which we first generate the data codes $\textbf{Q}$ for all the original data points under a pre-defined product quantizer. Then we rearrange them according to the order of $\textbf{ID}'$ and get a sorted code set $\textbf{Q}'$. $\textbf{Q}'$ will finally be stored on the external memory. We specify $s$ measured in machine words to denote the size of one PQ code, then the capacity of a $B$ machine words disk page for PQ codes becomes:
+\begin{equation}\label{eq:vq}
+V=\lfloor B/s \rfloor
+\end{equation}
+
+Final is the tree-building phase. Different from SK-LSH, we maintain G values instead of compound hash keys in the B$^+$-trees. Note that, we do not maintain all the G values in $\textbf{G}$, we extract a representative G value set $\textbf{G}^R$ from it. Concretely, we represent each data page (full of PQ codes now) by extracting a pair of G values $\langle L, U \rangle$ which belong to the first and the last data code respectively on a disk page. Then a B$^+$-tree is built over all the representative G values pairs $G^R$ as shown in Fig. \ref{fig:indexing}. Note that the total number of data pages storing PQ codes is $\lceil n/V \rceil$, then the total number of the representative G values becomes:
+\begin{equation}\label{eq:nrepg}
+\eta = 2\lceil n/V \rceil \approx 2ns/B
+\end{equation}
+This means a compression ratio of nearly $\frac{B}{2s}$ of G values. And $s \ll B$ usually holds, for example, 64-bit PQ codes in 4KB disk pages means $s=2$ and $B=1024$. Therefore, it is a significant space saving for the index structure while not degrade the routing effect of the B$^+$-tree in ANN search.
+
+To sum up, during the entire process of index constructing, we use one set of product quantizer to generate PQ codes and $\mathcal{L}$ set of compound hash functions for LSH encoding. Therefore, the index structure of SC-LSH contains $\mathcal{L}$ B$^{+}$-trees, $\mathcal{L}$ set of ID permutations and $\mathcal{L}$ set of relatively sorted data codes.
+
+\subsection{ANN Search}\label{subsec:annsearch}
+% 算法的终止条件，决定磁盘页面需要加载顺序，从而引出查询点-页面距离定义
+We set the termination condition of ANN search in SC-LSH as the number of data pages $N_P$ allowed to be accessed in order to make a better control of both the accuracy and the I/O efficiency. Therefore, the order of pages accessed needs to be decided to make sure that more data items with higher quality can be reached during the search process. To achieve that, we define the distance between a query point and a data page as follows.
+\begin{definition}
+\label{def:distP}
+(\textbf{Distance between a Query Point and a Data Page}) Given a query point $q$ and a data page $P_i$ containing at most $V$ data codes, let $G_q$ be the G value of $q$ and a pair of G values $\langle L_i, U_i \rangle$ to denote $P_i$. The distance between the query point $q$ and $P_i$, denoted as $dist_{Page}(q,P_i)$, is calculated as follows:
+\begin{equation}
+\label{eq:distP}
+dist_{Page}(q,P_i) = \left\{ \begin{array}{ll}
+dist_G(G_q, L_i) & \textrm{if $G_q \leq_O L_i \leq_O U_i$} \\
+0 & \textrm{if $L_i \leq_O G_q \leq_O U_i$} \\
+dist_G(G_q, U_i) & \textrm{if $L_i \leq_O U_i \leq_O G_q$}
+\end{array} \right.
+\end{equation}
+\end{definition}
+
+% 解释查询点到页面的距离的含义 - ###可加可不加
+As shown in Definition \ref{def:distP}, for $G_q$ and $\langle L_i,U_i\rangle$, there are three cases which need to be considered. In the first case, $G_q$ is smaller than all the G values of the data items in $P_i$. So the lower bound of distances between $G_q$ and the G values of data items in $P_i$ is $dist_G(G_q, L_i)$. In the second case where $G_q$ falls into the range between $L_i$ and $U_i$, the distance of $G_q$ and page $P_i$ is defined as 0. In the third case where $G_q$ is greater than all G values of data items in $P_i$, the lower bound is $dist_G(G_q, U_i)$.
+
+% 查询时定位到最近页面
+Based on the above definition, we discuss in the following how to find the closest page towards $q$ in a sorted code set. Let $n$ be the cardinality of $\textbf{D}$ and $\rho = \lceil n/V \rceil$ be the number of data code pages. In addition, we use $\textbf{P} = \{P_1, P_2, \dots, P_{\rho}\}$ to refer to the set of data pages. Note that, a B$^+$-tree in the index structure is created to index all the representative G values $\Theta = \{L_1, U_1, L_2, U_2, \dots, L_{\rho}, U_{\rho}\}$. It is very convenient to find two G values in $\Theta$, $\theta_i$ and $\theta_{i+1}$ ($1 \leq i \leq 2\rho-1$), such that $\theta_i \leq G_q \leq \theta_{i+1}$ by searching in the B$^+$-tree. If $\lceil \frac{i}{2} \rceil = \lceil \frac{i+1}{2} \rceil$, indicating that $\theta_{i}$ and $\theta_{i+1}$ belong to the same data page $P_{\lceil \frac{i}{2} \rceil}$, the closest data page to $q$ is $P_{\lceil \frac{i}{2} \rceil}$ according to Definition \ref{def:distP}. Otherwise, $\theta_{i}$ and $\theta_{i+1}$ belong to different data pages and we compare the distances of $P_{\lceil \frac{i}{2} \rceil}$ and $P_{\lceil \frac{i+1}{2} \rceil}$ to $q$ respectively to figure out the closest one.
+
+% 需要确定在多个哈希表间加载页面的方法
+In SC-LSH, we employ $\mathcal{L}$ index files in order to reduce the loss of false negatives. The key operation for ANN search is to find the next data page to be accessed among $\mathcal{L}$ B$^+$-trees in the index files, which can be done by bi-directional expansion at data pages of all B$^+$-trees. Algorithm \ref{alg:mts} summarizes the whole search process in multiple hash tables of SC-LSH.
+\begin{algorithm}[t]
+\caption{Multi-Tree Search}
+\label{alg:mts}
+\begin{algorithmic}[1]
+\REQUIRE $\textbf{T}=\{T_{i}|1 \leq i \leq L\}$, $q$, $N_{P}$;
+\ENSURE the nearest neighbor $o$;
+\FOR{$i = 1$ to $\mathcal{L}$}
+\STATE Compute the G values $G_{q}^i$ of $q$;
+\STATE Find out and initialize $P_{iL}$ and $P_{iR}$;
+\ENDFOR
+\REPEAT
+\STATE $P = extract(\Phi)$;
+\STATE Verify data codes on $P$ and update $o$;
+\STATE $P' = shift(P)$;
+\STATE $\Phi = \Phi \cup P'$;
+\UNTIL{$|\Phi| \geq N_{p}$}
+\RETURN $o$;
+\end{algorithmic}
+\end{algorithm}
+
+% 为每个页面初始化指针
+Firstly, we set two pointers $P_{iL}$ and $P_{iR}$ on each hash table $T_i$ to help guide the page accessing, as shown in line 1-4 in Algorithm \ref{alg:mts} where $1\leq i \leq \mathcal{L}$. We use $P_{iL}$ to denote the closest data page to $q$ in $T_i$, and $P_{iR}$ to the data page immediately succeeding $P_{iL}$. Figure \ref{fig:search} shows an example where 3 index files are built.
+% 举例说明过程
+Taking $T_1$ as an example, $P_{12}$ has the smallest distance to $G_{q}^1$. Hence, $P_{1L}$ is set to be $P_{12}$ and $P_{13}$ as $P_{1R}$. Similarly, we obtain $P_{2L}$, $P_{2R}$, $P_{3L}$ and $P_{3R}$. It is easily derived that the page with the smallest distance to its corresponding G value of the query point must be in the set $\Phi=\{P_{1L}, P_{1R}, P_{2L}, P_{2R}, P_{3L}, P_{3R} \}$.
+
+% 循环记载页面并验证
+Line 5-10 in Algorithm \ref{alg:mts} describes the loop where we constantly determine the next data page to load and verify the candidates among $\mathcal{L}$ hash tables. To facilitate the discussion, we define two operations on $\Phi$, $extract$ and $shift$. $extract(\Phi)$ returns the closest data page in $\Phi$ from all B$^+$-trees, say $P_*$, and $P_*$ is meanwhile removed from $\Phi$. $shift(P)$, where $P \in \Phi$, means $P$ moving the pointer to $P$ away from $q$ by one page to $P'$. For instance, the result of $shift(P_{1L})$ is $P_{11}$ and that of $shift(P_{2R})$ is $P_{24}$. Besides, we will use the new page of $shift(P)$ to replace $P$ in $\Phi$. By repeating $extract$ and $shift$ operations, close data pages towards the query point will be found from all B$^+$-trees in sequence.
+\begin{figure}[t]
+\begin{center}
+{
+\includegraphics[width=0.48\textwidth]{search.pdf}
+}
+\end{center}
+\caption{Bi-directional expansion}
+\label{fig:search}
+\end{figure}
+
+% PQ的距离计算
+Before we do candidate refining, we need to prepare a lookup table composed of the squared distances between each sub vector of the query point and each sub codewords. After we load the candidate PQ codes into the memory, we perform AQD computations between the codes and the query according to Equation \ref{eq:aqd} based on the lookup table to determining nearest neighbors.
+
+% 终止
+Finally, if the number of data pages verified exceeds a threshold, $N_P$, specified before the search, SC-LSH terminates the search process (line 10 in Algorithm \ref{alg:mts}). Usually, we recommended to maintain a bitmap in the algorithm to avoid unnecessary replicated verification.
+
+
+\subsection{Complexity analysis}\label{ssec:complex}
+% Space complexity
+As mentioned in Section \ref{ssec:indexing}, the space consumption of SC-LSH mainly consists of three parts, (1) parameters of $\mathcal{L}$ set of compound hash functions, totally $\mathcal{L}md$, (2) $\mathcal{L}$ set of sorted ID list, totally $\mathcal{L}n$ and (3) $\mathcal{L}$ hash tables where each contains a B$^+$-tree maintaining a set of representative G values and one set of data codes. According to Equation \ref{eq:nrepg}, there are totally about $\eta =2ns/B$ representative G values to maintain in a B$^+$-tree. Therefore, the total space consumption of SC-LSH will be $O(\mathcal{L}(md+n+ns(2m/B+1))$. Usually $2m \ll B$ holds in practical cases, then the space consumption will become $O(\mathcal{L}(md+n(s+1)))$. Note that this is a remarkable progress compared with SK-LSH since we get rid of the limitation of space consumption from $d$.
+
+
+% 分析下对CPU的影响
+The time consumption of SC-LSH consists of two parts, (1) disk processing among $\mathcal{L}$ hash tables to load $N_P$ pages and (2) verifying the loaded candidate codes. The first part consists of the searching in $\mathcal{L}$ hash tables and loading candidate codes in $N_P$ pages. The former one is related to the height $E$ of the B$^+$-trees. Denote the order (or branch factor) of a B$^+$-tree as:
+\begin{equation}
+b=\lfloor B/m\rfloor
+\label{eq:ob}
+\end{equation}
+Then
+\begin{equation}
+E=\log_{b}{\eta}.
+\label{eq:e}
+\end{equation} Since the time cost of processing a page is $O(B)$. The time cost for the first part is totally $O(\mathcal{L}b\log_{b}\frac{2ns}{B}+BN_P)$ combined with Equation \ref{eq:nrepg}.
+As for the candidates verification, the time cost is $O(BN_P\mathcal{M}/s)$ since each PQ code consumes an $O(\mathcal{M})$ AQD computation. Therefore, compared with SK-LSH, under the same amount of $N_P$ pages, SC-LSH will reduce the time cost of disk page processing since $s \ll d$. However, we cannot draw a deterministic conclusion telling which is better in the candidate verification. Though an AQD computation is less expensive than an Euclidean distance computation, SC-LSH takes more verification tasks under the same disk page access.
+
+
+% I/O cost
+Finally, the I/O cost in SC-LSH is quite explicit. It contains the nearest data page locating among $\mathcal{L}$ hash tables and $N_P$ pages accessing, which is totally $\mathcal{L}E+N_P$.
+
+% SC-LSH用更少的I/O取得了更好的结果
+% Intuitively, SC-LSH returns superior results with a much less running time than other state-of-the-art LSH-based methods because it verifies much more candidates with dramatically less I/O operations, which we will justify and discuss in details in Section~\ref{sec:er}.
+
+
+
+% 引子：使用PQ的复杂度分析
+% In this section, we first conduct a comprehensive study of the effect on the ANN search accuracy and I/O efficiency. Then we give a report on the time and space consumption of SC-LSH.
+
+
+\section{Experiments}\label{sec:er}
+In this section, we empirically evaluate the performance of SC-LSH for ANN search. We conduct experiments on three public real-world multimedia datasets, which are described as follows.
+
+\textbf{Audio}\footnote{\scriptsize{http://www.cs.princeton.edu/cass/audio.tar.gz}}. Containing 54,387 192-dimensional audio feature vectors extracted from the DARPA TIMIT audio speech database by the Marsyas library. We set $B$ to be 1024 machine words.
+
+\textbf{Sift}. Containing 1,000,000 local SIFT~\cite{Lowe2004Distinctive} descriptors, the dimensionality of each vector is 128. $B$ is set to be 1024 words.
+
+\textbf{Gist}. Consists of 1,000,000 960-D global color GIST~\cite{Oliva2001Modeling} descriptors. $B$ is set to be 4096 words.
+
+For each dataset, we randomly select 200 points randomly to form the query set and the rest as the base set.
+
+\subsection{Performance measures}
+To reflect the accuracy and efficiency of LSH-based methods, we employ three measures, $ratio$, $I/O$ cost and the \emph{Index Size} to evaluate the performance of the ANN search.
+
+\begin{description}
+\item[$\bullet$] $\textbf{ratio}$.
+$ratio$ is used to evaluate the accuracy of the returned neighbors. Given a query $q$, let $o_1^*$,$o_2^*$,\ldots,$o_k^*$ be the $k$NNs w.r.t $q$, an approach for ANN search returns $k$ points $o_1$,$o_2$,\ldots,$o_k$. Both results are ranked by the increasing order of their distance to $q$. Therefore, the approximate ratio for ANN w.r.t $q$ is computed as
+\begin{equation}
+ratio(q) = \frac{1}{k}\sum_{i=1}^{k}\frac{\left\|{ o_i,q }\right\|}{\left\|{ o_i^*,q }\right\|}
+\label{Eq:ratio}
+\end{equation}
+In the following experiment, we use the mean of $ratio(q)$ over the query set.
+\item [$\bullet$] \textbf{Index Size}. The space consumption of the index structures of a LSH scheme.
+\item [$\bullet$] \textbf{I/O cost}. The I/O cost is defined as the number of pages to be accessed during the ANN search. For most external ANN search methods, it is treated carefully because it is somewhat one of the major factor that can determine the time efficiency of the ANN search.
+\end{description}
+
+\subsection{Parameter Settings}\label{ssec:ps}
+We compare SC-LSH with four state-of-the-art LSH-based methods on external memory, including C2LSH~\cite{Gan2012C2LSH}, SK-LSH~\cite{Liu2014SKLSH}, SRS~\cite{Sun2014SRS} and QALSH~\cite{Huang2015QALSH}. To make a fair comparison, we set the parameters of each methods to exhibit their best tradeoff on both the accuracy and the I/O efficiency. The detailed parameter setting for each method are listed in Table \ref{tbl:para}.
+
+To some extent, C2LSH and QALSH are similar to each other since they are both based on the dynamic collision counting mechanism. We specify them to achieve different goals. We turn on the early termination condition ($Ct=1$) in C2LSH to achieve better efficiency, while we let QALSH pursuit better accuracy. As for SRS, we deploy the SRS$-$12 variant and set $c$=4 on all datasets as suggested in~\cite{Sun2014SRS}. For SK-LSH, it needs to tune the parameters to express the best performance, especially the width $W$ of LSH functions. Finally, $W$ are fixed at 3, 1000, 2.5 for Audio, Sift and Gist, respectively. SC-LSH is not sensitive with $W$, in this paper, we fix $W$=1 for all datasets. Actually, in our practical experimental observations, any small value that can divide more than 3$\sim$4 internals along the LSH functions is reasonable for SC-LSH. Besides, we set $m$=10 and $\mathcal{L}$=3 for both SK-LSH and SC-LSH on all the datasets for the sake of fairness.
+\begin{table*}[!htb]
+%\scriptsize
+\centering
+\caption{Parameter settings}\label{tbl:para}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Datasets$\backslash$Methods & C2LSH & SRS & QALSH & SK-LSH & SC-LSH\\
+\hline
+ \textbf{Audio} & $c$=3, $Ct$=1 & $c$=4 & $c$=3 & $m$=10, $W$=3, $\mathcal{L}$=3 & $m$=10, $W$=1, $\mathcal{L}$=3 \\
+ \textbf{Sift} & $c$=3, $Ct$=1 & $c$=4 & $c$=3 & $m$=10, $W$=1000, $\mathcal{L}$=3 & $m$=10, $W$=1, $\mathcal{L}$=3 \\
+ \textbf{Gist} & $c$=3, $Ct$=1 & $c$=4 & $c$=3 & $m$=10, $W$=2.5, $\mathcal{L}$=3 & $m$=10, $W$=1, $\mathcal{L}$=3\\
+\hline
+\end{tabular}
+\end{table*}%
+%\normalsize
+
+We varies the number $k$ of the returned nearest neighbor among $\{1,10,20,\ldots,100\}$ to observe the performance trend of all methods for ANN search and list all the experimental results in Fig. \ref{fig:ecomp} and Table \ref{tbl:io}.
+
+% section：改善线序的效果
+
+\subsection{Accuracy and I/O efficiency}
+% ratio的总体排序
+As for the $ratio$ in Fig. \ref{fig:ratio}, SC-LSH achieves the best $ratio$ on all datasets, following is QALSH and SK-LSH and then SRS and C2LSH. 
+
+
+% ratio的细节说明
+The result proves that the similarity-preserving ability of PQ codes are trustworthy in candidate refining. It also demonstrates our view that discriminating ability is the key of nearest neighbor discriminating and we are not necessarily relied on the original distance to do candidate refining as discussed in Section \ref{ssec:introPQ}. Besides, a characteristic of the ANN search of SC-LSH is that the accuracy is slightly worse when $k$ is small. This is caused by the quantization distortion in PQ codes because nearer neighbors (i.e., when $k$ is small) are more likely to be affected by the quantization distortions compared with further ones.
+
+% 总体评价I/O
+As for the I/O cost in Fig. \ref{fig:io}, SC-LSH also achieves the best performance, following is SK-LSH and then SRS and C2LSH. This is due to the excellent space efficiency of PQ codes, which enables SC-LSH access sufficient high quality candidates in much fewer disk page accesses. In contrast, since candidate capacity of the disk page in SK-LSH is limited by the data dimensionality, it has to consume more disk pages in high dimensional datasets.
+
+The results indicate that few disk pages can provide sufficient enough candidates
+
+% QA的IO
+We do not draw the I/O cost of QALSH in Fig. \ref{fig:io}, we list the numerical results in an extra table (Table \ref{tbl:io}) to better show the difference. As can be seen, on the small-scaled Audio dataset, QALSH consumes 25$-$35 times more page accesses than SC-LSH. On the two larger datasets, Sift and Gist, the difference grows to 112$-$133 and 140$-$166 times, respectively. significance it has to pay more I/O consumption.
+
+
+% SC的表现
+Considering the $ratio$ in Fig. \ref{fig:ratio} and $I/O$ reports in Fig. \ref{fig:io} which are the most concerned performances in this paper, it can be seen that SC-LSH achieves the best $ratio$ as well as the best I/O performance compared with other methods. It proves that PQ codes are precise enough to do candidate refining, and also demonstrates our opinion that discriminating ability is the key of nearest neighbor discriminating and we are not necessarily relied on the original distance as discussed in Section \ref{ssec:introPQ}.
+
+QALSH achieves the most proximate accuracy with SC-LSH, sometimes even better (e.g., for some smaller $k$s on Sift), however, it consumes the most I/O operations. We do not draw the I/O cost of QALSH in Fig. \ref{fig:io}, we list the numerical results in an extra table (Table \ref{tbl:io}) to better show the difference. As can be seen, on the small-scaled Audio dataset, QALSH consumes 25$-$35 times more page accesses than SC-LSH. On the two larger datasets, Sift and Gist, the difference grows to 112$-$133 and 140$-$166 times, respectively. significance it has to pay more I/O consumption.
+
+% QA的IO导致其时间开销是最多的
+The significant I/O consumption of QALSH leads to the its most ANN search time on Sift and Gist as shown in Fig. \ref{fig:art}.
+
+% 改善线序
+
+% 稍微提一下时间开销
+As for the $ART$, it shows that SC-LSH is not the least, SK-LSH consumes a bit less time than SC-LSH. We have mentioned this in the discussion of time complexity in Section \ref{ssec:complex}. Although an AQD computation is less expensive than an Euclidean distance computation, SC-LSH takes more verification under same amount of disk page accesses, for example, on Audio, SK-LSH can get about 1,000 points in 200 pages, while SC-LSH can access nearly 10,000 data codes even in 20 pages.
+
+
+
+% 总结
+Considering both the accuracy and I/O performance, SC-LSH achieves the best. Although QALSH achieves the most proximate accuracy with SC-LSH, sometimes even better (e.g., for some smaller $k$s on Sift), however, it consumes the most I/O operations.
+
+% 分析实验结果
+
+
+\begin{figure*}[t]
+\begin{center}
+\subfigure[Comparison of $ratio$]
+{
+\includegraphics[width=0.95\textwidth]{ratio.pdf}
+\label{fig:ratio}
+}
+\subfigure[Comparison of $I/O$ cost]
+{
+\includegraphics[width=0.95\textwidth]{IO.pdf}
+\label{fig:io}
+}
+\subfigure[Comparison of $ART$]
+{
+\includegraphics[width=0.95\textwidth]{ART.pdf}
+\label{fig:art}
+}
+\end{center}
+\caption{Experimental comparisons}
+\label{fig:ecomp}
+\end{figure*}
+
+
+\begin{table*}[!htb]
+\centering
+\caption{Comparison of $I/O$ cost between QALSH and SC-LSH}\label{tbl:io}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{Audio} & \multicolumn{3}{c|}{Sift} & \multicolumn{3}{c|}{Gist} \\
+\cline{2-10}
+\raisebox{1.2ex}[3pt]{$k$} & QALSH & SC-LSH & Q/S & QALSH & SC-LSH & Q/S & QALSH & SC-LSH & Q/S \\
+\hline
+
+1 & 650 & 26 & 25 & 11901 & 106 & 112 & 3659 & 26 & 140 \\
+10 & 761 & 26 & 29 & 13298 & 106 & 125 & 4052 & 26 & 155 \\
+20 & 794 & 26 & 30 & 13512 & 106 & 127 & 4123 & 26 & 158 \\
+30 & 815 & 26 & 31 & 13646 & 106 & 128 & 4166 & 26 & 160 \\
+40 & 839 & 26 & 32 & 13753 & 106 & 129 & 4192 & 26 & 161 \\
+50 & 853 & 26 & 32 & 13836 & 106 & 130 & 4216 & 26 & 162 \\
+60 & 875 & 26 & 33 & 13926 & 106 & 131 & 4244 & 26 & 163 \\
+70 & 886 & 26 & 34 & 13986 & 106 & 131 & 4268 & 26 & 164 \\
+80 & 900 & 26 & 34 & 14056 & 106 & 132 & 4290 & 26 & 165 \\
+90 & 911 & 26 & 35 & 14128 & 106 & 133 & 4313 & 26 & 165 \\
+100 & 925 & 26 & 35 & 14174 & 106 & 133 & 4332 & 26 & 166 \\
+
+\hline
+\end{tabular}
+\end{table*}
+
+\section{Related works}\label{sec:rw}
+Given a dataset $\textbf{D} \subset \mathbb{R}^{d}$ and a query point $q$, the target of NN problem is to find the point $o^{\ast} \in \textbf{D}$ satisfying that for any point $p \in \textbf{D}$, $\left\|{o^{\ast},q}\right\| \leq \left\|{p,q}\right\|$, where $\left\|{\cdot,\cdot}\right\|$ denotes the Euclidean distance between two points. In this paper, we focus on $c$-ANN, the popular approximate version of NN problem, which aims at finding a point $o \in \textbf{D}$ that satisfies $\left\| {o,q} \right\| \le c\left\| {o^{*},q} \right\|$. Here, $c$ is the approximation ratio, which exceeds 1.
+
+\subsection{Locality sensitive hashing}
+To solve the $c$-ANN problem, Indyk and Motwani proposed the idea of LSH~\cite{Indyk1998}, which is formally defined as follows.
+
+\begin{definition}
+\label{def:LSH}
+(\textbf{Locality Sensitive Hashing}) Given a distance $R$, an approximate ratio $c$ and two probability values $\mathbb{P}_1$ and $\mathbb{P}_2$, a hash function $h : \mathbb{R}^d \to \mathbb{Z}$ is called \textbf{$(R,c,\mathbb{P}_1,\mathbb{P}_2)$-sensitive} if it satisfies the following conditions simultaneously for any two points $o_1,o_2 \in \textbf{D}$:
+\begin{itemize}
+\item If $\left\|{o_1,o_2}\right\| \leq R$, then $Pr[h(o_1)=h(o_2)] \geq \mathbb{P}_1$;
+
+\item If $\left\|{o_1,o_2}\right\| \geq cR$, then $Pr[h(o_1)=h(o_2)] \leq \mathbb{P}_2$;
+\end{itemize}
+To make sense, both $c > 1$ and $\mathbb{P}_1 \geq \mathbb{P}_2$ hold. In addition, a \textbf{compound LSH function} is denoted as $G=(h_1, \ldots,h_m)$, where $h_1,\ldots,h_m$ are randomly selected LSH functions. Specifically, for $\forall p\in \textbf{D}$, $K=G(p)=(h_1(p), \ldots, h_m(p))$ is defined as the \textbf{compound hash key} of point $p$ under $G$.
+\end{definition}
+According to Definition \ref{def:LSH}, LSH ensures that a close pair collides with each other with a high probability ($\mathbb{P}_1$) and a far pair with a low probability ($\mathbb{P}_2$). This property of LSH is also called distance-preserving.
+
+The LSH function commonly used in Euclidean Space, which was proposed by Datar et al.~\cite{Datar2004}, is shown as the following:
+\begin{equation}
+h(p) = \lfloor \frac{a \cdot p + bW}{W} \rfloor
+\label{Eq:lsh}
+\end{equation}
+Here, $a$ is a random vector with each dimension independently chosen from a Gaussian distribution and $p$ is an arbitrary point in $\textbf{D}$. $b$ is a real number uniformly drawn from the range [0,1]. $W$ is also a real number representing the width of the LSH function. For two points $o_1$, $o_2$ and an LSH function $h$, if $\left\|{o_1 , o_2}\right\| = r$, the probability of $h(o_1)=h(o_2)$ can be computed as follows~\cite{Datar2004}.
+\begin{equation}
+\label{eq:p(r,w)}
+\begin{array}{ll}
+p(r,W) &= Pr[h(o_1)=h(o_2)] \\
+       &= \int_0^W \frac{1}{r}f_2(\frac{t}{r})(1-\frac{t}{W})dt \\
+       &= 2norm(W/r) - 1 - \frac{2}{\sqrt{2\pi}}\frac{r}{W}(1-e^{-\frac{W^2}{2r^2}})
+\end{array}
+\end{equation}
+Here, $f_2(x)=\frac{2}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$ and $norm(\cdot)$ represents the cumulative distribution function of a random variable following Gaussian Distribution. According to Equation \ref{eq:p(r,w)}, the probability $p(r,W)$ decreases monotonically when $r$ increases but grows monotonically when $W$ rises.
+
+Due to the distance-preserving property of LSH, it is rational to use the hash values to estimate the distance between two points. Therefore, if two points have similar hash values, it is believed that they are close to each other with certain confidence. Based on this idea, several approaches have been proposed for $c$-ANN~\cite{Datar2004,Gan2012,Gionis1999,Lv2007,Tao2009}. However, it is obvious that Equation \ref{Eq:lsh} exhibits poor performance in filtering candidate points, as many pairs, which are distant from each other, may share the same hash value under a single hash function. In other words, numerous false positives may be returned. To remove the irrelevant points (i.e., false positives), a compound LSH function $G=(h_1,h_2, \ldots, h_m)$ is employed so as to improve the distinguishing capacity of a single LSH function. Note that each element of a compound LSH function, $h_i$, is randomly selected as defined in Equation \ref{Eq:lsh}. The basic LSH~\cite{Datar2004} suggests only points sharing all the $m$ hash values with the query point should be taken into account as candidate points, which is too strict to return enough number of result points. Instead, $c$-ANN search algorithms should enable that data points having similar compound hash keys to the query point are taken into account as candidates. Hence, a distance measure over compound hash keys is required. In the following, we propose a novel measure to evaluate the distance between a pair of compound hash keys.
+
+% 不同LSH方法的做法
+In fact, most the following studies notice this issue, including E2LSH, Entropy-LSH, LSB, C2LSH, etc. And they realized to consider neighbor buckets to boost the efficiency. Entropy-LSH shakes the query point. E2LSH shakes the compound hashing keys of query point. C2LSH count collisions initially and then expand to load neighbor buckets.
+
+In fact, most the following studies notice this issue, including E2LSH, Entropy-LSH, LSB, C2LSH, etc. And they realized to consider neighbor buckets to boost the efficiency. Entropy-LSH shakes the query point. E2LSH shakes the compound hashing keys of query point. C2LSH count collisions initially and then expand to load neighbor buckets.
+
+Unfortunately, all those methods realized to make full use of neighbor buckets, they cannot store neighbor buckets locally on the disks. And this consumes a lot of I/O cost during candidates verification which drops the efficiency.
+
+To overcome the I/O cost, the core mission is how to arrange candidates locally on the disk according to the information carried from the compound hashing keys.
+
+LSB glanced at this problem, while SK-LSH really did this.
+
+It introduces space-filling curves to generate space linear orders for the compound hashing keys. Fig.\ref{fig:sfc} show some kinds of space-filling curves. What SFC do. Space-filling curves projects multi-dimensional coordinates into one interger.
+
+We can see that, all these curves share a common property, neighbors along the curves are most likely to be neighbor in the original space. This is called the ``clustering property" of space-filling curves.
+
+If one projects compound hashing keys into one-dimensional integers and sort them ascendingly. Arrange the keys according to this order, we can endow the compound hashing keys with the locally distribution property.
+
+This can help us to load more well-quality candidates after locate to the nearest compound hashing keys.
+
+
+
+\section{Discussion and conclusion}\label{sec:con}
+
+
+\section{------ split line ------}
+
+
+
+%======================================================================================================
+\section{Experimental Results}\label{sec:expresult}
+%======================================================================================================
+In this section, we empirically evaluate the performance of the SK-LSH methods (including SK-LSH and \emph{e}SK-LSH), and compare them with state-of-the-art techniques~\cite{Gan2012,Norouzi2013,Tao2009} in four multimedia datasets, which are described as follows.
+
+\textbf{Corel} \footnote{\scriptsize{http://kdd.ics.uci.edu/databases/CorelFeatures/}}.	\textbf{Corel} consists of 68,040 32-dimensional color histograms from the same number of images.
+
+\textbf{Aerial} \footnote{\scriptsize{http://vision.ece.ucsb.edu/data-sets}}. The original \textbf{Aerial} dataset contains 275,465 60-dimensional texture vectors, for the convenience of PQ encoding, we take the top 56 dimensions with the largest variance to construct a dataset of 275,465 56-dimensional data objects.
+
+\textbf{Audio}\footnote{\scriptsize{http://www.cs.princeton.edu/cass/audio.tar.gz}}. There are 54,387 192-dimensional vectors in \textbf{Audio} dataset, as extracted from the \textsc{ldc switchboard}-1 collection.
+
+\textbf{Sift}. ANN{\_}SIFT1M consists of three parts, 1,000,000 base vectors, 100,000 learn vectors and 10,000 query vectors, and the dimensionality of each vector is 128.
+
+\textbf{Gist}\footnote{\scriptsize{http://corpus-texmex.irisa.fr/}}
+
+For each dataset, we randomly select 200 points uniformly to form the query set.
+
+\subsection{Performance measures}
+We employ four different measures to evaluate the performance of the SK-LSH methods.
+\begin{itemize}
+\item $ratio$. $ratio$ is used to evaluate the accuracy of the returned neighbors. Given a query $q$, let $o_1^*$,$o_2^*$,\ldots,$o_k^*$ be the $k$NNs with respect to $q$, an approach for ANN search returns $k$ points $o_1$,$o_2$,\ldots,$o_k$. Both results are ranked by the increasing order of their distance to $q$. Therefore, the approximate ratio for ANN with respect to $q$ is computed as
+    \begin{equation}
+    ratio(q) = \frac{1}{k}\sum_{i=1}^{k}\frac{\left\|{ o_i,q }\right\|}{\left\|{ o_i^*,q }\right\|}
+    \label{Eq:ratio}
+    \end{equation}
+    In the following experiment, we use the mean of $ratio(q)$ over the query set, which consists of 200 random points.
+\item Average Response Time ($ART$). The time cost mainly consists of two parts, the searching in $\mathcal{L}$ B$^+$-trees to find the closest data pages to the query point and verifying data items to find nearest neighbors from $\mathcal{L}$ index files. In the SK-LSH methods, much fewer data pages are necessary to access than LSB and C2LSH while there are indeed more distance computations than LSB and C2LSH. On the other hand, the index structure of CK-Means is very small in size but its CPU cost is considerable. Hence, to make a fair comparison, we use the average response time to evaluate the performance of ANN search. Here, we use $t_i$ to denote the time cost for the $i$-th query point and $n_q$ the cardinality of the query set.
+    \begin{equation}
+    ART = \frac{1}{n_q}\sum_{i=1}^{n_q}t_i
+    \end{equation}
+\item Space Consumption. The space consumption of a LSH scheme is the space occupied by its corresponding index structures.
+\item I/O cost. The efficiency of LSB and C2LSH are sensitive to I/O cost, but they cannot make full use of each random I/O to find enough candidate points. However, the SK-LSH methods successfully overcome this issue and achieve much better performance in accuracy and efficiency. Hence, we also present the comparisons of I/O cost between the SK-LSH methods and LSB, C2LSH.
+\end{itemize}
+
+\subsection{Effect of model parameters} \label{sec:expemp}
+In the SK-LSH methods, there are several parameters which may affect the performance, including the width $W$ for each LSH function, the number $m$ of LSH functions in a compound LSH function, the number $N_P$ of data pages accessed during the search process, and the number $\mathcal{L}$ of index files. In this subsection, we evaluate the effect of these parameters on both SK-LSH and \emph{e}SK-LSH in sequence. Defaultly, in the following experiments we set the number of returned neighbors $k$ as 100 and the size of a disk page $B$ as 1024 words. Besides, we generate 64-bit PQ codes in \emph{e}SK-LSH according to the suggestion of the CK-Means model in~\cite{Norouzi2013}.
+
+\btitle{Effect of $W$ and $m$.}
+$W$ and $m$ are two fundamental parameters for constructing an index file. Hence, we vary these two parameters together for a single index file by fixing $\mathcal{L}$ as 1, $N_P$ as 100 (resp., 20) in SK-LSH (resp., \emph{e}SK-LSH) without loss of generality. A group of experiments are conducted to evaluate the performance of the SK-LSH methods under different $W$ and $m$. Since the number $N_P$ of data pages accessed is fixed, the time cost will remain the same under different settings. Therefore, we only concern the precision of returned neighbors measured by $ratio$. The related results are presented in Figure \ref{fig:w_m}.
+
+Generally, the choices of $W$ and $m$ do affect the accuracy of returned neighbors on both the SK-LSH methods according to Figure \ref{fig:w_m}.
+We first investigate the performance of SK-LSH. On one hand, we see that, a smaller $m$ can achieve utterly perfect distinguishing power and adding more LSH functions (i.e., increasing $m$) will not make any improvements. For instance, on the \textbf{Sift} dataset in Figure \ref{fig:w_m}(a), when $W$ is set to 1800, the largest value, the $ratio$ exceeds 1.3 with $m$ set to 20, while in contrast, the $ratio$ stays around 1.27 as $m$ exceeds 30. Notably, the $ratio$ fluctuates slightly when $m$ is large enough for different $W$. The reason is simple that when $m$ is large enough, concatenating more LSH functions is helpless to the distinguishing power of a compound LSH function. On the other hand, by comparing the stable part of $ratio$ for different $W$, we see that the $ratio$ always stays at a relatively high value when $W$ is small, then drops to a lower level when $W$ is large enough. After that, the $ratio$ remains stable with the growth of $W$. For instance, on the \textbf{Corel} dataset in Figure \ref{fig:w_m}(a), when $W$ is 0.2, the smallest value, $ratio$ stays around 1.19, then drops to around 1.15 with larger $W$, and stays around this level as $W$ increases. This is caused by our randomly selected LSH functions. As is known, when $W$ is very small, it is probable that close pairs will fall into different hash buckets. However, our distance measure for hash keys is sensitive to such issues, because it may miss candidate points. In fact, if $W$ is too large, more LSH functions has to be employed to acquire good distinguishing power, which increases the time cost for not only index construction but also the search process.
+As a result, we can conclude that if a good distinguishing power is desired, an adequate $W$ should be found and $m$ should be large enough.
+\begin{figure*}[t]
+\begin{center}
+\subfigure[Performance on SK-LSH]
+{
+\includegraphics[width=0.99\textwidth]{wm_sklsh.pdf}
+\label{fig:sklsh_wm}
+}
+\subfigure[Performance on \emph{e}SK-LSH]
+{
+\includegraphics[width=0.99\textwidth]{wm_sklsh2.pdf}
+\label{fig:sklsh2_wm}
+}
+\end{center}
+\caption{Effect of $W$ and $m$}
+\label{fig:w_m}
+\end{figure*}
+
+Similar phenomena with that of SK-LSH can be found in \emph{e}SK-LSH as shown in Figure \ref{fig:w_m}(b), except two differences: (1) the stable part of $ratio$ in \emph{e}SK-LSH is smaller than that of SK-LSH on all 4 datasets, which means \emph{e}SK-LSH achieves better accuracy of returned nearest neighbors than SK-LSH with less page accesses, and (2) there are no obvious differences between $ratio$ of smaller $W$ with that of larger $W$ on both the \textbf{Corel} and the \textbf{Audio} datasets, which indicates that for \emph{e}SK-LSH, changes of $W$ can no longer affect the accuracy of returned nearest neighbors significantly on small datasets.
+
+The first difference well justifies out analysis for the accuracy of ANN in Section \ref{subsec:effect}, i.e., the employed 64-bit PQ codes owns a relatively good enough similarity-preserving ability which enables \emph{e}SK-LSH transform the advantage in the quantity of candidates into accuracy improvement with less page accesses than SK-LSH. Besides, this advantage in candidate quantity also makes up with some loss of false negatives caused by other improper settings, such as smaller $W$. Since \textbf{Corel} and \textbf{Audio} are both low-cardinality datasets (68,040 and 54,387, respectively in data item number), 20 pages of PQ codes could provide more than 10,000 PQ codes, which is nearly 3 and 20 times more candidate data items than SK-LSH on these two datasets, respectively. It will cover more false negatives missed by LSH functions with small $W$, and thus shorten the gap in $ratio$ between smaller $W$ and larger $W$.
+
+% [old analysis: \emph{e}SK-LSH complete better than SK-LSH in accuracy]Reasons for these differences lies in the changes of \emph{e}SK-LSH w.r.t SK-LSH, i.e., replacing real data points with PQ codes in data item storing in index construction and candidates loading during ANN search. More essentially, the capacity of disk pages for data items has changed. For instance, since \emph{e}SK-LSH employs 64-bit PQ codes for replacement, the capacity of disk pages $V_e$ turns to be 512 according to Equation \ref{eq:cq}, which means \emph{e}SK-LSH could always load nearly 10,000 candidate PQ codes for nearest neighbors filtration on all the datasets. As for SK-LSH, since the capacity of disk pages depends on the dimensionality of data points according to Equation \ref{eq:cp}, the amount of candidate data points that could be accessed are 3,200, 1,800, 500, 800 on \textbf{Corel}, \textbf{Aerial}, \textbf{Audio} and \textbf{Sift}, respectively. Therefore, based on a relatively good enough similarity-preserving ability of PQ codes, \emph{e}SK-LSH transforms the advantage in the quantity of candidates into accuracy improvement, which leads to the $ratio$ dominance on all 4 datasets of \emph{e}SK-LSH w.r.t SK-LSH in the first difference. Besides, this advantage in candidate number can also make up with some loss of false negatives cased by other improper settings, such as smaller $W$. Since \textbf{Corel} and \textbf{Audio} are both low-cardinality datasets (68,040 and 54,387 respectively in data item number as mentioned above), 20 pages of PQ codes could provide nearly 3 and 20 times more candidate data items on these two datasets respectively, which will cover more false negatives missed by LSH functions with small $W$, and thus shorten the gap in $ratio$ between small $W$ and larger $W$.
+
+According to Figure \ref{fig:w_m}, we could find out a proper $(W,m)$ pair on each dataset for both the SK-LSH methods in the following experiments. With these $(W,m)$ pairs, the SK-LSH methods exhibit relatively the best performance with respect to $ratio$. In the following experiments, we set $(W,m)$ as (0.6, 12) for \textbf{Corel}, (70, 40) for \textbf{Aerial}, (3, 20) for \textbf{Audio} and (1,000, 30) for \textbf{Sift}, respectively in SK-LSH. For the \emph{e}SK-LSH, $(W,m)$ is set as (0.6, 10) for \textbf{Corel}, (50, 20) for \textbf{Aerial}, (2, 3) for \textbf{Audio} and (1,000, 40) for \textbf{Sift}, respectively. Notice that $m$ is much smaller than the dimension on most datasets.
+
+\begin{figure}[h]
+\begin{center}
+\subfigure[Performance on SK-LSH]
+{
+\includegraphics[width=0.49\textwidth]{np_sklsh.pdf}
+\label{fig:no_sklsh}
+}
+\subfigure[Performance on \emph{e}SK-LSH]
+{
+\includegraphics[width=0.49\textwidth]{np_esklsh.pdf}
+\label{fig:no_esklsh}
+}
+\end{center}
+\caption{Effect of $N_P$ on SK-LSH and \emph{e}SK-LSH}
+\label{fig:np}
+\end{figure}
+
+\btitle{Effect of $N_P$.}
+The number $N_P$ of available data pages for a query directly affects the accuracy of returned neighbors and response time. Intuitively, the more data pages accessed, the more precise neighbors be returned but more time be consumed during the search process. We vary the value of $N_P$ from 100 to 1,000 and 10 to 100 in SK-LSH and \emph{e}SK-LSH, respectively. The results are presented in Figure \ref{fig:np}.
+
+Firstly, we see that $ratio$ in SK-LSH keeps on decreasing on every datasets when $N_P$ increases in Figure \ref{fig:no_sklsh}. This justifies our discussion in last paragraph. For $ART$, it increases almost linearly with the growth of $N_P$ on every datasets, which is also consistent with our complexity analysis in Section \ref{subsec:effect}.
+Similar phenomenon appears in the results of \emph{e}SK-LSH in Figure \ref{fig:no_esklsh}. Secondly, we notice that \emph{e}SK-LSH consumes less page accesses while produces better accuracy than SK-LSH on each dataset. This phenomenon, on one hand, demonstrates the good enough discriminating ability of the employed 64-bit PQ codes in our experiments; on the other hand, is due to the enlarged capacity of disk pages in holding data items after replacing real data points with PQ codes. Recall that this enlarged ratio is $d/s$, i.e., 16, 28, 96 and 64 on \textbf{Corel}, \textbf{Aerial}, \textbf{Audio} and \textbf{Sift}, respectively. Therefore, although \emph{e}SK-LSH takes only $1/10$ page accesses comparing with that of SK-LSH, it still loads much more candidate data items than SK-LSH. What's more, this advantage in the number of accessed candidates is expanding with the growth of data dimensionality $d$ since \emph{e}SK-LSH has got rid of the limitation from it while SK-LSH has not. This is reflected in the significant difference in the $ratio$ of ANN search conducted on the \textbf{Audio} dataset between SK-LSH and \emph{e}SK-LSH. Recall that \textbf{Audio} is a dataset who owns the largest dimensionality ($d=192$) among all the 4 datasets and with a small size ($n=54387$). \emph{e}SK-LSH easily covers more than half (about 30,000) the codes of \textbf{Audio} and produces relatively good $ratio$ (about 1.036578) within 60 data page accesses, while SK-LSH reaches $1/10$ the elements (about 5,000) under 1,000 page accesses.
+
+
+% [a special comparison based on in-complete experiments in SK-LSH]
+% [2-1]To show the effect on accuracy and response time of ANN search caused by $N_P$ and observe the improvement of I/O performance on \emph{e}SK-LSH w.r.t SK-LSH, we fix $N_P$ as 100 for SK-LSH and vary the values of $N_P$ for \emph{e}SK-LSH in the range of $[\varepsilon_l, \varepsilon_u]$. Here, $\varepsilon_l$ is the number of disk pages with which \emph{e}SK-LSH could load the \emph{same candidate items} as that of SK-LSH, and $\varepsilon_u = 100$, is the \emph{same number of disk pages} loaded with that of SK-LSH. The results are displayed in Figure \ref{fig:np}.
+
+% [2-2]According to Figure \ref{fig:no_ratio}, $ratio$ in \emph{e}SK-LSH keeps on decreasing on every datasets when $N_P$ increases, which justifies our discussion in last paragraph. Comparing with SK-LSH, we see that with the same number of candidate data items, \emph{e}SK-LSH obtains worse $ratio$ on all 4 datasets, which clearly reflects the impact on accuracy of the quantization distortion in PQ codes. With more disk pages accessed, \emph{e}SK-LSH gradually catches up with and outperforms SK-LSH in $ratio$ according to the auxiliary lines in Figure \ref{fig:no_ratio}. However, this outperforming costs more CPU response time. According to Figure \ref{fig:no_time}, the $ART$ on \emph{e}SK-LSH increases almost linearly as $N_P$ rises for different datasets. This phenomenon in response to our uncertain in the analysis of CPU complexity in Section \ref{subsec:effect}, i.e., although one AQD distance computation is less expensive than that of one Euclidean distance computation, \emph{e}SK-LSH may consume more CPU response time than SK-LSH with a sufficiently significant advantage in the amount of candidates.
+
+%[old analysis: \emph{e}SK-LSH much better]The number $N_P$ of available data pages for a query directly affects the accuracy of returned neighbors and response time. Intuitively, the more data pages are accessed, the more precise neighbors are returned but more time is consumed during the search process.
+%Besides, within a single page access, \emph{e}SK-LSH is superior to SK-LSH in the number of candidate items. Such advantage not only makes up for the loss of accuracy caused by the use of PQ codes, but also improves accuracy of returned nearest neighbors as observed above. To show the effect on accuracy and response time of ANN search caused by $N_P$ and observe the improvement of \emph{e}SK-LSH w.r.t SK-LSH, we fix $N_P$ as 100 for SK-LSH and vary the values of $N_P$ for \emph{e}SK-LSH in the range of $[\varepsilon_l, \varepsilon_u]$. Here, $\varepsilon_l$ is the number of disk pages with which \emph{e}SK-LSH could load the \emph{same candidate items} as that of SK-LSH with $N_P=100$, and $\varepsilon_u = 100$, is the \emph{same number of disk pages} loaded with that of SK-LSH. The results are displayed in Figure \ref{fig:np}.
+%
+%According to Figure \ref{fig:no_ratio}, $ratio$ in \emph{e}SK-LSH keeps on decreasing on every datasets when $N_P$ increases, which justifies our discussion in last paragraph. Comparing with SK-LSH, we see that with the same number of candidate data items, \emph{e}SK-LSH obtains worse $ratio$ on all 4 datasets, which clearly reflects the impact on accuracy of the quantization distortion in PQ codes. However, with more disk pages accessed, \emph{e}SK-LSH rapidly catches up and finally outperforms SK-LSH in $ratio$ at a certain $N_P$ value. According to the auxiliary lines in Figure \ref{fig:no_ratio}, we see that this outperforming does not cost much more disk page access, less than 10 on \textbf{Corel} and \textbf{Aerial} and less than 5 on \textbf{Audio} and \textbf{Sift}. Based on this, \emph{e}SK-LSH then produces a significant advantage w.r.t SK-LSH in $ratio$ under the same number of disk pages.
+%
+%As for the CPU cost in Figure \ref{fig:no_time}, since more disk pages provide more candidates, the $ART$ increases almost linearly as $N_P$ rises for different datasets. Besides, although one ADC distance computation is less expensive than that of Euclidean distance, \emph{e}SK-LSH takes more CPU response time than SK-LSH under the same amount of page access. This has been theoretically analyzed before in Section \ref{subsec:effect}, and the reason resides in the candidate quantity, \emph{e}SK-LSH takes a ratio of $d/s$ more in quantity of candidates than SK-LSH.
+
+
+\btitle{Effect of $\mathcal{L}$.}
+$\mathcal{L}$ is the number of index files which affects the number of false negatives and space consumption. Moreover, it also affects the precision of returned neighbors. Intuitively, larger $\mathcal{L}$ indicates that more information provided by the index files facilitates the accuracy of returned neighbors. To measure the effect of $\mathcal{L}$ on $ratio$, we vary $\mathcal{L}$ from 2 to 10 for the SK-LSH methods with $W$ and $m$ fixed as above. To keep a relatively same number of loaded candidate data points on different dataset in SK-LSH, we set $N_P$ as 32 on \textbf{Corel}, 56 on \textbf{Aerial}, 200 on \textbf{Audio} and 128 on \textbf{Sift}, respectively. These $N_P$ values would always ensure SK-LSH load about 1,000 candidate data points on each datasets. As for \emph{e}SK-LSH, $N_P$ is fixed to be 20. Moreover, we take the response time into account since $\mathcal{L}$ affects time cost of the search process in $\mathcal{L}$ B$^+$-trees. The results are shown in Figure \ref{fig:l}.
+\begin{figure}[t]
+\begin{center}
+\subfigure[Performance on SK-LSH]
+{
+\includegraphics[width=0.49\textwidth]{l_sklsh.pdf}
+\label{fig:l_sklsh}
+}
+\subfigure[Performance on \emph{e}SK-LSH]
+{
+\includegraphics[width=0.49\textwidth]{l_sklsh_pq.pdf}
+\label{fig:l_sklsh_pq}
+}
+\end{center}
+\caption{Effect of $\mathcal{L}$ on SK-LSH and \emph{e}SK-LSH}
+\label{fig:l}
+\end{figure}
+
+Generally, we see that the $ratio$ decreases when $\mathcal{L}$ ranges from 2 to 10 on all 4 datasets for both SK-LSH and \emph{e}SK-LSH. This is consistent to our intuitive study since more index files improves the quality of data pages accessed by covering more false negatives. Besides, it justifies that our distance measure proposed in Section~\ref{sec:preliminary} is effective. So is the search strategy among multi-indexes in Section \ref{subsec:search}. Moreover, as $\mathcal{L}$ increases, the decreasing speed of $ratio$ shows a submodular pattern~\cite{Sub_78_Nem}. It means increasing the number of index files contributes little to the accuracy of returned neighbors when $\mathcal{L}$ is large enough. As observed in Figure \ref{fig:l}, the $ratio$ remains nearly stable for all the datasets when $\mathcal{L}$ exceeds 8 for both methods.
+
+In addition, increasing $\mathcal{L}$ will lead to more time cost for searching in B$^+$-trees. Notably, the height of a B$^+$-tree is very small in our experiment, 2 for all the datasets. Moreover, for a page in a B$^+$-tree, the closest data page to a query point can be found by a binary search since the hash keys are stored in increasing order. Thus, it only takes very little time to search in a B$^+$-tree. According to Figure \ref{fig:l}, $ART$ do not increase significantly as $\mathcal{L}$ increase in both methods.
+\begin{figure*}[t]
+\begin{center}
+\subfigure[\textbf{Corel}]
+{
+\includegraphics[width=0.23\textwidth]{Measure_Color.pdf}
+\label{fig:measure_color}
+}
+\subfigure[\textbf{Aerial}]
+{
+\includegraphics[width=0.23\textwidth]{Measure_Aerial.pdf}
+\label{fig:measure_aerial}
+}
+\subfigure[\textbf{Audio}]
+{
+\includegraphics[width=0.23\textwidth]{Measure_Audio.pdf}
+\label{fig:measure_audio}
+}
+\subfigure[\textbf{Sift}]
+{
+\includegraphics[width=0.23\textwidth]{Measure_Sift.pdf}
+\label{fig:measure_sift}
+}
+\end{center}
+\caption{Influences of distance measures on $ratio$}
+\label{fig:measure}
+\end{figure*}
+
+
+Recall that the space consumptions for both the SK-LSH and \emph{e}SK-LSH are proportional to the value of $\mathcal{L}$, we set $\mathcal{L}$ as 3 to make an appropriate trade-off between accuracy and space consumption in the following experiment unless otherwise specified. In fact, the space consumption of both the SK-LSH methods with $L=3$ is less than the state-of-the-art LSH methods (e.g. LSB and C2LSH), which is shown in Table~\ref{table:sr} and will be discussed in details in Section~\ref{ssec:comp2lsbnc2lsh}.
+
+
+\subsection{Influence of different distance measures}\label{ssec:distmeasure}
+Before the performance comparison between the SK-LSH methods and the state-of-the-art LSH-based methods, we first observe the effects of different distance measures on the accuracy of returned results in this part. As mentioned in Section \ref{ssec:DMSKLSH}, there are three kinds of distance measures for compound hash keys, namely $KL$ in Definition~\ref{def:KL}, $dist$ in Definition~\ref{def:dist} and $COUNT$, which simply counts the number of common hash values between two compound hash keys. Here, we vary the number of points verified during the ANN search. Notably, there is only one compound hash function used. We present the results performed on all the 4 datasets in Figure \ref{fig:measure}.
+
+
+As shown in Figure \ref{fig:measure}, when verifying the same number of points, $COUNT$ guarantees much more accurate results than both $KL$ and $dist$ while $dist$ ensures slightly better results than $KL$, since $dist$ contains more information (i.e., $KD$) than $KL$. As aforementioned, there is no linear order for $COUNT$ and hence we cannot adopt efficient index structure over that, so we select $dist$ instead in this paper.
+
+\subsection{Comparison with LSB and C2LSH}\label{ssec:comp2lsbnc2lsh}
+In this part we compare the performance of the SK-LSH methods with that of LSB and C2LSH on all the datasets, dimensions of which range from 32 to 192. To make a fair comparison, we set the page size $B$ as 4KB for all compared LSH methods.
+%For LSB and C2LSH, the coordinates of each data point should be scaled into integers with a specified range. The range is fixed as $[0, 10^4]$ for LSB, as suggested in~\cite{Tao2009}. The range for C2LSH is selected as the optimal one, according to which C2LSH obtains the best performance. Hence, the range is $[0, 10^6]$ for \textbf{Corel}, $[0, 10^4]$ for \textbf{Aerial}, $[0, 10^5]$ for \textbf{Audio} and $[0, 10^4]$ for \textbf{Sift}.
+In addition, we set parameters of the compound LSH functions in the SK-LSH methods according to the above discussion in Section \ref{sec:expemp}. For the terminate condition of SK-LSH, $N_P$ is set as 32, 56, 200 and 128 on \textbf{Corel}, \textbf{Aerial}, \textbf{Audio} and \textbf{Sift}, respectively. That is, SK-LSH will load nearly a fixed amount of candidate data points (i.e. about 1,000) on various datasets. As for \emph{e}SK-LSH, $N_P$ is set as 20 on all 4 datasets, which means \emph{e}SK-LSH will always load about 10,000 candidate PQ-codes. To make a complete comparison, we vary $k$, the number of returned neighbors, in the set \{1, 10, 20, 30, ..., 100\}. All the performance measures are evaluated in the comparison, namely, $ratio$, $ART$, $I/O$ cost and space consumption. Table \ref{table:ps} presents the detailed settings of essential parameters for all the compared methods.
+\begin{table}[b]
+\centering
+\caption{Parameter Settings for LSH-based Methods}
+\label{table:ps}
+{
+\begin{tabular}{|c|c|c|c|c|c|}
+
+% title
+\hline
+\multicolumn{2}{|c|}{$Methods$} & \textbf{Corel} & \textbf{Aerial} & \textbf{Audio} & \textbf{Sift} \\
+\hline
+
+% for LSB
+ & $m$ & 16 & 20 & 19 & 24 \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{LSB-forest} & $l$ & 46 & 123 & 101 & 124 \\
+\hline \hline
+
+% for C2LSH
+ & $m$ & 208 & 230 & 204 & 250 \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{C2LSH} & $C_t$ & 7 & 8 & 7 & 9 \\
+\hline \hline
+
+% for SK-LSH
+ & $\mathcal{L}$ & 3 & 3 & 3 & 3 \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{SK-LSH} & $N_P$ & 32 & 56 & 200 & 128 \\
+\hline \hline
+
+% for \emph{e}SK-LSH
+ & $\mathcal{L}$ & 3 & 3 & 3 & 3 \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{\emph{e}SK-LSH} & $N_P$ & 20 & 20 & 20 & 20 \\
+\hline
+
+\end{tabular}
+}
+\end{table}%
+
+\btitle{Comparison in $ratio$.}
+The comparisons of $ratio$ on different datasets are presented in Figure \ref{fig:nk_ratio}. In general, the two SK-LSH methods significantly outperform LSB and C2LSH in $ratio$, which reflects the precision of returned neighbors, and C2LSH overmatches LSB in most cases. The curves of $ratio$ for SK-LSH and C2LSH rise as $k$ increases on all the 4 datasets. Among the two, $ratio$ of C2LSH are getting worse much faster than that of SK-LSH. In comparison, the curves of $ratio$ for LSB and \emph{e}SK-LSH exhibit a gradually decreasing trend. In fact, the difference in the trend of $ratio$ curves between the two SK-LSH methods are caused by the difference in data items maintained in their index files. According to Equation \ref{eq:p(r,w)}, a nearer nearest neighbor is more likely to collide with $q$ than a farther nearest neighbor since the former one owns a smaller distance $r$ to $q$. Therefore, under the same number of loaded locally distributed candidates (i.e., 1,000 in our experiments), NN$_1$ (the nearest neighbor w.r.t $q$ with rank 1) is more likely to be retrieved than NN$_{100}$ (the nearest neighbor w.r.t $q$ with rank 100). Therefore, the $ratio$ curve of SK-LSH rises as $k$ increases. As for \emph{e}SK-LSH, firstly, 10,000 candidates determined on multiple sets of compound hash keys are enough to cover most 100-NNs (nearest neighbors whose ranks are within [1,100]), and the similarity-preserving ability of PQ-codes enables them to identify most of these nearest neighbors. However, since there exists quantization error in PQ-codes, it becomes more difficult to identify a nearer nearest neighbor than a farther one based on them, which results in the decreasing trend in $ratio$ with the growth of $k$.
+
+\begin{figure*}[t]
+\begin{center}
+\subfigure[\textbf{$ratio$}]
+{
+\includegraphics[width=0.99\textwidth]{nk_ratio.pdf}
+\label{fig:nk_ratio}
+}
+\subfigure[\textbf{$ART(ms)$}]
+{
+\includegraphics[width=0.99\textwidth]{nk_art.pdf}
+\label{fig:nk_art}
+}
+\subfigure[\textbf{$I/O$}]
+{
+\includegraphics[width=0.99\textwidth]{nk_io.pdf}
+\label{fig:nk_io}
+}
+\end{center}
+\caption{Comparisons of $ratio$, $ART$ and $I/O$ on different datasets}
+\label{fig:nk}
+\end{figure*}
+
+\btitle{Comparison in $ART$.}
+As shown in Figure \ref{fig:nk_art}, SK-LSH obviously exhibits the best performance comparing with its competitors (i.e., LSB and C2LSH) in average response time ($ART$) on most datasets (including \textbf{Corel}, \textbf{Aerial} and \textbf{Sift}). Especially, on \textbf{Aerial} and \textbf{Sift}, SK-LSH consumes less time than C2LSH by more than an order of magnitude and LSB by two orders of magnitude on \textbf{Aerial}. However, in \textbf{Sift} and \textbf{Audio}, whose dimensionality are as large as 128 and 192, respectively, the efficiency of SK-LSH obviously degrades, which indicates that the time cost of SK-LSH is sensitive to the dimensionality of the dataset. As discussed in Secion~\ref{sec:comsis}, when the dimensionality is high, SK-LSH has to spend more time to deal with pages necessary to be accessed. C2LSH is not sensitive to the dimensionality, it's sensitive to the dataset size according to Figure \ref{fig:nk_art}. We can see that C2LSH consumes significantly less time than LSB on all the datasets, and slightly overmatches SK-LSH in time cost on \textbf{Audio} who has the largest dimensionality but the smallest size. As for \emph{e}SK-LSH, the time cost is not affected by the dimensionality $d$, and is slightly affected by the dataset size $n$ and the dimensionality of the compound hash keys $m$. This conforms to our analysis in Section \ref{subsec:effect}. In addition, although consuming more time than SK-LSH on most datasets because of the large quantity in candidate items, \emph{e}SK-LSH still exhibits the best performance comparing with C2LSH and LSB.
+
+Combining Figure \ref{fig:nk_ratio} and Figure \ref{fig:nk_art}, it is obvious that both SK-LSH and \emph{e}SK-LSH return \emph{more precise neighbors} than LSB and C2LSH with \emph{less response time}, which demonstrates the superiority of the SK-LSH methods over LSB and C2LSH. In the following, we try to explain the advantages of the SK-LSH methods by comparing the I/O cost and the space cost.
+
+\btitle{Comparison in $I/O$.}
+Combining Figure \ref{fig:nk_ratio} and Figure \ref{fig:nk_io}, we can see that SK-LSH consumes the least I/O cost while achieves the best accuracy comparing with LSB and C2LSH on most datasets. This strongly demonstrates the effectiveness of the principle of SK-LSH in Section \ref{ssec:LinearOrder} which devotes to improving the locally distribution of candidates by constructing linear order for compound LSH keys. Benefited from this, SK-LSH exhibits significant improvement in I/O performance w.r.t LSB and C2LSH, especially on \textbf{Corel}, \textbf{Aerial} and \textbf{Sift}. However, since the capacity of disk pages for real data points $V$ is inversely proportional to $d$ according to Equation \ref{eq:cp}, SK-LSH needs to access more disk pages to provide sufficient candidates to ensure a good accuracy on higher-dimensional dataset. Therefore, on the small-sized high-dimensional dataset \textbf{Audio}, at very small value of $k$, SK-LSH is slightly outperformed in I/O cost by C2LSH whose I/O performance is stable with $d$.
+
+Actually, the I/O cost of LSB and C2LSH are indeed influenced by the size of the dataset. Obviously, they consume more I/O cost in \textbf{Sift} than the other 3 datasets. Besides, the I/O cost of LSB keeps stable on different datasets while that of C2LSH varies with the size of the dataset. Besides, the I/O cost of C2LSH increases linearly with the value of $k$ while that of LSB does not vary with $k$. This is caused by their different terminating conditions. The main I/O cost of C2LSH is used to access candidate points and each access to a candidate means a random I/O. As to LSB, its I/O is paid to find candidate points with the most similar z-orders to that of the query points among a large number of LSB-trees.
+
+Notably, the I/O cost of \emph{e}SK-LSH keeps unchanged for different $k$ and datasets. This is caused by the fact that the search process of the SK-LSH methods actually consists of two parts: (1) exploration among $\mathcal{L}$ B$^+$-trees and (2) accessing $N_P$ data pages. For each B$^+$-tree, only $E$ (the height of a B$^+$-tree) pages are necessary to be accessed, where $E$ is a small value according to the analysis in Section \ref{sec:comsis}. In fact, in our experiments, it is 2 for all the datasets. Hence, together with our strict limit on the number of loaded data pages, the I/O cost of \emph{e}SK-LSH is fixed to be 26. Based on this, \emph{e}SK-LSH enhances the scalability on $d$ for SK-LSH which realizes our ultimate goal in Section \ref{sec:enhancescalability}. Finally, \emph{e}SK-LSH reduces the I/O cost by an order of magnitude compared to LSB and C2LSH on all the 4 datasets according to Figure \ref{fig:nk_io}.
+
+
+%When considering the space cost and $I/O$ simultaneously, we can see that SK-LSH obtain enormously more candidate points during a random I/O, thus leading to a considerately more efficient ANN search. Besides, all the three LSH methods performs ANN search among multiple hash structures. However, SK-LSH employs dramatically less hash structures than LSB and C2LSH. Both LSB and C2LSH employs much more hash structures (LSB-trees or hash tables) than SK-LSH, which will cost more time to collect enough information during the search. We also present the comparisons of number of hash structures among the three LSH approaches in Table \ref{table:sr} and it is clearly seen that SK-LSH constructs less hash structures than LSB by an order of magnitude and than C2LSH by two orders of magnitude.
+
+\btitle{Comparison in Space Consumption.}
+Space consumption is also an important indicator for LSH schema, which is closely related to its applicability and scalability. As described above, the space required by the SK-LSH methods consist of two parts: $\mathcal{L}$ B$^+$-trees and $\mathcal{L}$ copies of the dataset. In our experiments, the space consumption of different LSH-based methods are listed in Table \ref{table:sr}.
+\begin{table}[t]
+\scriptsize
+\centering
+\caption{Comparison of Space Consumption (SC)\label{table:sr}}
+\begin{tabular}{|c|c|c|c|c|c|}
+% for Corel dataset
+\hline
+\multicolumn{2}{|c|}{$Methods$} & LSB & C2LSH & SK-LSH & \emph{e}SK-LSH \\
+\hline
+& Parameters & $l=46$ & $m=208$ & $L=3$ & $L=3$ \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{\textbf{Corel}} & SC & 878MB & 164.4MB & 26MB & \textbf{2.5MB} \\
+\hline \hline
+
+% for Aerial dataset
+& Parameters & $l=123$ & $m=230$ & $L=3$ & $L=3$ \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{\textbf{Aerial}} & SC & 16.9GB & 253.5MB & 194MB & \textbf{9.6MB} \\
+\hline \hline
+
+% for Audio dataset
+& Parameters & $l=101$ & $m=204$ & $L=3$ & $L=3$\\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{\textbf{Audio}} & SC & 14.1GB & 90.8MB & 128MB & \textbf{2MB}\\
+\hline \hline
+
+% for Sift dataset
+& Parameters & $l=124$ & $m=250$ & $L=3$ & $L=3$ \\
+\cline{2-6}
+\raisebox{1.2ex}[0pt]{\textbf{Sift}} & SC & 168GB & 1.2GB & 1.53GB & \textbf{34.5MB}\\
+\hline
+
+\end{tabular}
+\end{table}%
+\normalsize
+
+As is known, LSB and SK-LSH are based on multiple compound hash structures, which makes the maintenance of multiple copies of the dataset become the main part in their space consumption. However, since SK-LSH is able to achieve relatively good accuracy of ANN search under a small number of compound hash tables according to Figure \ref{fig:nk_ratio}, it consumes much less space than LSB as shown in Table \ref{table:sr}. Different with LSB and SK-LSH, C2LSH only needs to maintain one copy of real data points, and the total space consumption is $O(dn+n \log_2 n)$. As a result, on higher-dimensional datasets, e.g. \textbf{Audio} and \textbf{Sift}, C2LSH consumes less space than SK-LSH.
+
+Nevertheless, the maintenance of real data points in most LSH-based methods would somehow affect their scalability and usage in large-scale high-dimensional data space. \emph{e}SK-LSH gets rid of such issue. Since it no longer maintains real data points, the size of one data items copy is reduced by a ratio of nearly $d/s$ ($s=2$ for 64-bit PQ codes). Therefore, the index size becomes \emph{tiny} in \emph{e}SK-LSH according to Table \ref{table:sr}, which produces good applicability and scalability.
+
+%[improper expression on traditional LSH-based methods on space cost]Nevertheless, the maintenance of the original dataset in most LSH-based methods is a typical limitation. It will affect their scalability and usage in large-scale high-dimensional data space. We recommend a replacement of the original data points with PQ codes to address this issue, \emph{e}SK-LSH. The effectiveness of \emph{e}SK-LSH has been proved in Figure \ref{fig:nk}. After the replacement, the size of one copy of the original dataset is reduced by a ratio of nearly $d/s$ ($s=2$ for 64-bit PQ codes). Therefore, the index size becomes eventually tiny in \emph{e}SK-LSH according to Table \ref{table:sr}, which produces good applicability and scalability.
+
+
+\subsection{Comparisons with CK-Means}\label{ssec:comp2ckmeans}
+In this part, we compare the performance between the SK-LSH based methods and CK-Means, the state-of-the-art ANN search method in the computer vision community which is based on product quantization. Note that CK-Means is a memory-resident index method, we only concern the accuracy ($ratio$) and time cost ($ART$) here. Experiments are performed on two representative datasets, \textbf{Aerial} and \textbf{Sift}, which are both high-dimensional and large-scale. $\mathcal{L}$ is fixed to be 10 for both SK-LSH and \emph{e}SK-LSH. In SK-LSH, we load 256 and 512 disk pages on the two datasets, respectively. In \emph{e}SK-LSH, $N_P$ is fixed to be 128 on both datasets. Besides, we employ 64-bit PQ codes in both \emph{e}SK-LSH and CK-Means, as suggested by M. Norouzi et al.~\cite{Norouzi2013}. The results are shown in Figure \ref{fig:ck}.
+
+As Figure \ref{fig:ck_ratio} depicts, SK-LSH outperforms CK-Means on \textbf{Aerial} in $ratio$ for all the $k$ values. While on the \textbf{Sift} dataset, SK-LSH and CK-Means return results with similar accuracy, and SK-LSH performs better when $k$ is small. Notably, the $ratio$ of SK-LSH increases with the growth of $k$, while that of CK-Means presents an opposite trend. Besides, \emph{e}SK-LSH shows the same trend with that of CK-Means, and nearly achieves the same accuracy with CK-Means in most cases. The difference in the performance of $ratio$ are caused by the choice of different data items (real data points or PQ codes) in different methods. For CK-Means and \emph{e}SK-LSH, the quantization distortion in PQ codes will weaken their ability of discriminating nearer nearest neighbors: the nearer a nearest neighbor, the worse the discriminating ability. As a result, when $k$ is small, $ratio$ is very high, while for bigger $k$, the average $ratio$ in $k$ nearest neighbors becomes better. As for SK-LSH, since the real distances employed between the query and candidate data points provide no distortion error, under a same amount of candidates, the probability of finding nearer nearest neighbors becomes greater than that of further ones, which leads to the increasing trend in $ratio$. Therefore, to enhance the accuracy of ANN search in CK-Means and \emph{e}SK-LSH, the quality of employed PQ codes should be improved. We can increase the number of sub quantizers in a sub space, employ denser subdivision~\cite{Babenko2012Inverted} or use multiple sub codewords to encode sub vectors just like what~\cite{WangWSXSL15} suggests, etc., to produce more precise quantized codes.
+
+According to Figure \ref{fig:ck_art}, we see that SK-LSH costs much less time than CK-Means in the two datasets. This is because the main time cost of SK-LSH is on loading and verifying $N_p$ data points, which is sensitive to the dimensionality of the dataset but robust to the size of the dataset. While CK-Means needs to compute AQD distances between all codes and that of the query point. Those costs are very sensitive to the size of the dataset but robust to the dimensionality of the dataset. Given a fixed code length, since the size of \textbf{Aerial} and \textbf{Sift} are relatively large, SK-LSH outperforms CK-Means on $ART$ by almost an order of magnitude. Different with CK-Means, \emph{e}SK-LSH only needs to verify part of the PQ codes, therefore, it also consumes less time than CK-Means. However, both SK-LSH and \emph{e}SK-LSH require considerably more space than CK-Means because the index file of CK-Means mainly contains one copy of 64-bit codes for each point while the SK-LSH based methods need space for $\mathcal{L}$ datasets (or PQ code sets) and $\mathcal{L}$ $B^{+}$-trees.
+
+In short, the SK-LSH methods can better address the scalability issue than CK-Means, with a bit more memory space consumption.
+
+\begin{figure}[!t]
+\begin{center}
+%\subfigure[\textbf{Corel}]
+%{
+%\includegraphics[width=0.22\textwidth]{Cmo_Color_ratio.pdf}
+%\label{fig:cmo_color_ratio}
+%}
+\subfigure[\textbf{$ratio$}]
+{
+\includegraphics[width=0.49\textwidth]{ck_ratio.pdf}
+\label{fig:ck_ratio}
+}
+%\subfigure[\textbf{Audio}]
+%{
+%\includegraphics[width=0.22\textwidth]{Cmo_Audio_ratio.pdf}
+%\label{fig:cmo_audio_ratio}
+%}
+\subfigure[\textbf{$ART$}]
+{
+\includegraphics[width=0.49\textwidth]{ck_art.pdf}
+\label{fig:ck_art}
+}
+\end{center}
+\caption{CK-Means v.s. the SK-LSH methods}
+\label{fig:ck}
+\end{figure}
+
+%======================================================================================================
+\section{Related Work}\label{sec:relatedwork}
+%======================================================================================================
+There are a large number of methods addressing ANN search problem, the majority of which can be classified into three categories: methods based on Dimensionality Reduction (DR), methods based on LSH and those based on PQ.
+
+DR based methods~\cite{DBLP:conf/mm/HuangSSRZ08,Shen2007} first project high-dimensional points into a much lower dimensional space and then build indices in the projected space. Since NN search has been solved well in low-dimensional space, DR based methods could gain high efficiency by utilizing these sophisticated approaches for low-dimensional space~\cite{Berchtold1996,Katayama1997,White1996}.
+
+%LSH based methods are the most popular methods in the communities of database and computer vision due to its efficiency and error guarantee. The basic LSH method was first proposed by M. Datar~\cite{Datar2004}, but it is too space-consuming. Several methods were proposed to reduce the space consumption, including Entropy-based LSH~\cite{Panigrahy2006} and Multi-Probe LSH~\cite{Lv2007,Joly2008}. LSB~\cite{Tao2009} is the first LSH method that is designed for disk-resident data, followed by C2LSH~\cite{Gan2012}, which improves the efficiency and accuracy and reduces the space consumption. Note that there also exist many machine learning based hashing methods~ \cite{DBLP:conf/cvpr/HeoLHCY12,DBLP:conf/sigmod/Song13}. However, they usually require an expensive learning process to learn hash functions which could be highly data-dependent.
+
+With years of development, several approaches based on LSH have been proposed, including the basic LSH~\cite{Datar2004,Gionis1999,Indyk1998}, Entropy-based LSH~\cite{Panigrahy2006}, Multi-Probe LSH~\cite{Joly2008,Lv2007}, LSB~\cite{Tao2009}, C2LSH~\cite{Gan2012}, etc. They use different strategies to organize the hash keys of points to determine the candidates. The basic LSH~\cite{Datar2004} determines the candidate points in a straightforward way, which only considers the points sharing the same hash keys with the query point over a compound LSH function. In compensation for the loss of candidate points due to its strict filtering policy, hundreds of or even more hash tables are constructed, which causes a huge space consumption. To reduce the number of hash tables, Multi-Probe LSH~\cite{Lv2007} was proposed, which could find more similar points from a single hash table by exploring the buckets near the one into which the query point falls.
+
+LSB~\cite{Tao2009} takes a complicated but effective strategy to evaluate the similarity between points with their corresponding hash keys. Points in the original space are projected into a new space $\mathbb{Z}^m$ associated with $m$ randomly selected LSH functions, then the corresponding point in $\mathbb{Z}^m$ is converted into a string of bits, called z-order. Thus, the points will be accessed according to the similarities of their z-orders to that of the query point. C2LSH~\cite{Gan2012} proposes an interesting method to collect candidate points, called dynamic collision counting. At first, a base containing $m$ (usually hundreds of) LSH functions is built, where each LSH function corresponds to a hash table. C2LSH selects points frequently colliding with the query point among the base as candidate points. However, both LSB and C2LSH collect their candidates among a large number of hash structures and their candidates distribute among different disk (or data) pages. Thus, a large number of I/Os are unavoidable in order to obtain sufficient candidates to guarantee satisfactory accuracy of the returned results.
+
+% LSH的空间开销
+%A typical limitation of LSH-based methods is that their indexes require an extremely high amount of space which seriously affect the scalability and usage in high-dimensional data space. The indexing space of the original LSH method is super-linear in the number of data points~\cite{Datar2004}, usually including typically hundreds or thousands of hash tables in practice. Some latest methods, though cut down the size of index structure, still have a large space consumption. For the two state-of-the-art LSH-based methods LSB and C2LSH, the total space complexity are $O((nd)\sqrt{nd/B})$ and $O(nd+n\log_2 n)$, respectively. Unfortunately, the SK-LSH method that we propose above also suffers from this limitation as its space consumption is $O(Lnd(1+2m/B))$ as indicated in Section \ref{sec:comsis}.
+
+% SK-LSH的线序与LSB的线序
+Some others attempt to improve the I/O efficiency by  as well as elevating the candidate hit rate of a single page access in order to reduce the total I/O operations.
+% SK-LSH第一个这么做，线序组织、提取代表键值，定义键值距离，限制I/O 次数等一系列措施。
+SK-LSH (short for SortingKeys-LSH) is the first LSH-based method that specifically devote to optimize the I/O efficiency. It introduces a linear order to rearrange the data points so that candidates can be stored locally and thus be loaded continuously within less page access. During the ANN search, it strictly limits the number of disk page permitted to access, and also defines several distance measurements between the query data and disk pages to better guide the ANN search. However, it encounters several drawbacks
+
+define a set of distance measurements over hash keys and disk pages. representative hash keys, limit the number of disk pages to access. However, the linear order is simple,
+
+% In fact, LSB is the first one to use linear order. 但他的重点是提升精度，用线序定义键值距离，从而估计距离。没有过多考虑IO 的事情，所以没有专门的措施，例如页面与键值间的距离。
+% 但是，其使用的zorder线序却比sk的 rowwise根据优越性：neighbor-first 的优越性，balabalabala
+
+LSB use linear order to estimate the distance between hash keys, it does not mainly focus on the measurements to optimize the I/O manner.
+
+
+PQ-based methods~\cite{Jegou2011,Norouzi2013} are increasingly popular in the community of computer vision. They encode all points with a product quantizer and compute \emph{asymmetric quantizer distances (AQD)} between codes of query and data points during the search process. Finally, the data point with the smallest AQD value is returned as the ANN of the query. The basic PQ method was proposed by H. Jegou et al.~\cite{Jegou2011} and has been improved by several researchers since then. In particular, M. Norouzi et al.~\cite{Norouzi2013} proposed CK-Means, which improves the accuracy of returned results by optimally rotating the original space and re-ordering the dimensions.
+
+Finally, it is worth pointing out that this article substantially extends its preliminary version~\cite{LiuCHLS14} in the following aspects. Firstly, in our preliminary version~\cite{LiuCHLS14}, the page size $B$ was measured in the number of data points within a single disk page, and the value of $B$ was ad-hoc selected and fixed to be a constant (i.e., 100) for various datasets. This is unpractical in real applications. To address this problem, we firstly redefine the page size $B$ to be measured in machine words in this paper just like the disk models in \cite{Gan2012,Sun2014SRS,Tao2009}. As a result, two new symbols to represent the number of data items within a single disk page, $V$ and $V_e$, indicating the number of original data points and PQ codes fitted in a disk page with physical size $B$, respectively (see in Equation~\ref{eq:cp} and Equation~\ref{eq:cq}). Moreover, we discuss the compressing ratio of the index model as well as the number of I/O accesses with the new practical definition of $B$ in Section~\ref{ssec:index} and~\ref{sec:comsis}. Secondly, we show that the efficiency of original method proposed in~\cite{LiuCHLS14} is sensitive to the dimensionality of datasets. Given a fixed number of I/O access, the number of accessed candidate points in original methods drops as dimensionality $d$ increases. That is, the original method has to spend much more I/O accesses to verify enough candidate points. To address this limitation, we provide a novel model \emph{e}SK-LSH in Section~\ref{sec:enhancescalability} by integrating original method we proposed in the conference paper~\cite{LiuCHLS14} with PQ-based techniques to further boost the scalability of I/O performance.
+
+Thanks to PQ-based technique, this new model is now insensitive to the dimensionality of dataset. It can verify much more candidate points than~\cite{LiuCHLS14} within the same or even less number of I/O accesses. As a result, the new model can preserve similar, or even dramatically higher, accuracy within the same running time. Empirical study over not only LSH methods (i.e., LSB, C2LSH and SK-LSH) but also PQ-based method (i.e., CK-Means) show that our new method is efficient and effective in ANN search especially in higher dimensional data. Thirdly, we advocate more attentions be paid to the maintainability of high-dimensional index structures and present a dynamic version of the model in Section~\ref{sec:maintain}, namely \emph{m}SK-LSH, along with detailed operations for dynamic data insertions and deletions (Algorithm~\ref{alg:insert} and~\ref{alg:split}).
+
+%There are a large number of methods proposed for NN search and they could be divided into two categories, methods for exact NN search and others for approximate NN search. Existing solutions to exact NN search in low-dimensional space typically perform well~\cite{Beckmann1990,White1996}. However, their efficiency degenerates dramatically as the dimensionality of data increases and is eventually defeated by linear scan. To overcome ``Curse of Dimensionality'', many methods have been proposed.
+
+%The most representative approaches in exact NN search include data size reduction such as VA-File~\cite{Weber1998} and its variants IQ-tree~\cite{Berchtold2000}, VA$^{+}$-File~\cite{Ferha2000} and PCVA~\cite{Cui2007}, and one-dimensional transformation such as iDistance~\cite{Jagadish2005} and its improvement~\cite{Shen2005}. Moreover, LDC~\cite{Koudas2004} considers a single-bit representation for each dimension to speed-up the search process. More recently, an idea of reducing both data size and feature dimensionality has also been proposed~\cite{DBLP:conf/sigmod/HuangSLZ11}. In addition, Hyperplane Bounds~\cite{Ramaswamy2011} also reach good enough search performance for correlated high-dimensional datasets, where there exist heavy dependencies across dismension.
+
+%Although dimensionality reduction has shown reasonable performance for ANN search~\cite{DBLP:conf/mm/HuangSSRZ08,Shen2007}, hashing has recently gained its popularity due to its high efficiency. Based on the early Locality Sensitive Hashing (LSH), several LSH variants for ANN search have been proposed.
+
+%The basic LSH method was first proposed by M. Datar~\cite{Datar2004}. But it consumes too much space consumption. Several methods were proposed to reduce the space consumption, including Entropy-based LSH~\cite{Panigrahy2006} and Multi-Probe LSH~\cite{Lv2007,Joly2008}. LSB~\cite{Tao2009} generates z-order with the use of hash keys of compound LSH functions and employs B-trees, called LSB-forest, to manage the index files, which produces a good tradeoff between quality and efficiency. C2LSH~\cite{Gan2012} uses \emph{dynamic collision counting} to estimate the actual distances between two points and only a few number of candidates are satisfactory to obtain high-quality results. Note that there also exist many machine learning based hashing methods~\cite{DBLP:conf/cvpr/HeoLHCY12,DBLP:conf/sigmod/Song13}. However, they usually require an expensive learning process to learn hash functions which could be highly data-dependent.
+
+%======================================================================================================
+%\vspace{-3ex}
+\section{Discussion and Conclusion}\label{sec:conclusion}
+%======================================================================================================
+In this paper, we propose a novel index structure, SK-LSH, to address the ANN search problem. By arranging close data points locally distributed alongside a linear order conducted on their compound hash keys, we can find sufficiently accurate neighbors by accessing limited data pages, which speeds up the search process and gains high I/O efficiency. In the extended version, \emph{e}SK-LSH, we combine SK-LSH with product quantization techniques to enhance its scalability in I/O performance and space consumption. Extensive experiments conducted on 4 real-life datasets demonstrate the superiority of the SK-LSH methods over the state-of-the-art LSH approaches, LSB and C2LSH, and the state-of-the-art PQ-based method CK-Means (especially w.r.t the time cost). Meanwhile, we advocate more attentions be paid to the maintainability of high-dimensional index structures, and provide a dynamic version of SK-LSH, \emph{m}SK-LSH. We specify detailed operations for dynamic data insertions and deletions.
+
+In the future, we may continue exploiting techniques from both computer vision community and database community to boost the scalability of LSH-based methods and carry on exploring the applications of techniques proposed in this paper in related research fields such as image retrieval, security and etc.
+
+% Conclusion：肯定linear order带来的贡献，指出一个缺点——原始点对扩展性的拖累（比较笼统）
+The linear order constructed on compound hash keys in Section \ref{ssec:LinearOrder} enables the local distribution in storage of candidate data points. Due to that, SK-LSH is able to access sufficient high-quality candidates via less random I/O operations compared with other methods. Not only does it exhibit good enough accuracy, but also speedup the search process. However, there is a limitation in SK-LSH: its scalability of I/O performance is highly sensitive to the dimensionality of data points (i.e., $d$). Specifically, we note that the number $V$ of data points fitted in a disk page is inversely proportional to $d$ according to Equation \ref{eq:cp}. Therefore, on high-dimensional dataset, SK-LSH has to consume more page access to load sufficient candidates in order to ensure the search accuracy.
+
+
+\begin{acknowledgements}
+Jiangtao Cui and Hui Li are supported by National Nature Science Foundation of China (Nos. 61173089, 61202179, 61472298 and U1135002), National High Technology Research and Development Program (863 Program) (No. 2015AA016007), SRF for ROCS, SEM and the Fundamental Research Funds for the Central Universities.
+\end{acknowledgements}
+
+% BibTeX users please use one of
+%\bibliographystyle{spbasic}      % basic style, author-year citations
+\bibliographystyle{spmpsci}      % mathematics and physical sciences
+%\bibliographystyle{spphys}       % APS-like style for physics
+\bibliography{cuiref}   % name your BibTeX data base
+
+
+
+\end{document}
+% end of file template.tex
+
